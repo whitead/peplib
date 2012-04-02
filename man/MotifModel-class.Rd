@@ -1,0 +1,149 @@
+\name{MotifModel-class}
+\Rdversion{1.1}
+\docType{class}
+\alias{MotifModel-class}
+\alias{MotifModel}
+\alias{motifModel}
+\alias{plot,MotifModel-method}
+\alias{predict,MotifModel-method}
+\alias{print,MotifModel-method}
+\alias{residuals,MotifModel-method}
+
+\title{Class "MotifModel"}
+\description{
+This is a simple implementation of the MEME motif finding algorithm. The
+MEME algorihtm uses an Expetation-Maximimization search for motifs on
+sequences (\code{\linkS4class{Sequnces}}). It requires a choice of the
+motif length. For multiple motifs see \code{\link{MotifModelSet}}
+}
+\section{Objects from the Class}{
+Objects can be created by calls of the form \code{motifModel(seqs,
+  type="fixed", width=4)}
+}
+
+\section{Arguments}{
+
+  \describe{
+
+    \item{\code{seqs}}{ A \code{\linkS4class{Sequences}} object which
+      contains the sequences to be fit}
+    \item{\code{type}}{Can be \code{"fixed"}, \code{"variable"}, or
+      \code{"optional"}. \code{"fixed"} means there is a single motif at
+      the same position in all sequences. \code{"variable"} means there
+      is a single motif at a different position in each
+      sequence. \code{"optional"} means there is a single motif or no
+      motif at each sequence in a variable position.}
+      
+    \item{\code{width}}{The number of residues in the motif, the width
+      of the motif.}
+    
+    }
+  }
+
+\section{Slots}{
+  \describe{
+    \item{\code{mmodel}:}{Object of class \code{"matrix"} The motif,
+  represented as a matrix. Each element in the matrix is the likelihood
+  of that residue being in the position. The rows are the residue type
+  and the columns are the position in the motif.   }
+    \item{\code{bmodel}:}{Object of class \code{"numeric"} The
+  background model is the model which generates the non-motif
+  residues. The data is the probability of each residue type.}
+    \item{\code{width}:}{Object of class \code{"integer"} The width is
+  the number of residues in the motif }
+    \item{\code{seqs}:}{Object of class \code{"Sequences"} The sequence
+  to which the motifs are being fit. }
+    \item{\code{np}:}{Object of class \code{"integer"} The number of
+  parameters in the model, used for calculating the BIC }
+  }
+}
+\section{Methods}{
+  \describe{
+    \item{plot}{\code{signature(x,...)}: Plots varying descriptive graphs
+      of the motif model. The first thing plotted is the likelihood of the
+      motif starting in each possible position. This is marginal over all
+      sequences. Next, the likelihood of each residue is plotted in a series
+      of plots representing each position in the motif. Last, the likelihood
+      of each sequence from the motif model is plotted.}
+    \item{predict}{\code{predict(object,newSequences=object@seqs)}:
+      Calculates the likelihood for each sequence being generated from the
+      motif model. This is useful for checking for outliers or ensuring the
+      motif model fits the data. Passing new sequences in allows
+      classification of new sequences. }
+    
+    \item{print}{\code{print(object)}: Prints information
+      about the motif model. The motif "mode" is simply all residues
+      with greater than 15\% probability in decreasing order with a max of
+      4 (since \code{15*5 > 100}). So, [R][GF][GFRD] indicates that only
+      R has a greater than 15\% probability in position 1. In position
+      2, only G and F do, with G having a higher probability than F.
+      In position 3, G, F, R and D all have over 15\% probability of
+      occuring. }
+    
+    \item{residuals}{\code{residuals(model, seqs=model@seqs,
+	classes=rep(0,nrow(seqs)), threshold = 0)}: This method classifies
+      \code{seqs} and calculates the number of false positives, false
+      negatives, and a measure of accuracy (see refernces) between 0 and
+      1. \code{classes} should be the true classes for each sequence, where
+      a negative number means it is not in the model and a positive number
+      or 0 means it is in the model. The default is all in the model. The
+      log-likelihood for each sequence according to the model is calculated
+      and if it is greater than the \code{threshold}, the sequence is classified as
+      in the model. These predictions are tested against the true
+      \code{classes} passed to the method. The default value for
+      \code{classes} is all sequences belong in the model. The
+      log-likelihood for each sequence according to the model is calculated
+      and if it is greater than the \code{threshold}, the sequence is classified as
+      in the model. These predictions are tested against the true
+      \code{classes} passed to the method.}
+
+}
+}
+\references{
+%%  ~~put references to the literature/web site here~~
+}
+\author{
+Andrew White
+}
+
+\seealso{
+  \code{\linkS4class{Sequences}}
+}
+\examples{
+
+#get sequence data
+data(SHP2Sequences)
+
+
+#Create a fixed and optional type model
+SHP2Fixed <- motifModel(SHP2Sequences)
+print(SHP2Fixed)
+plot(SHP2Fixed)
+
+SHP2Opt <- motifModel(SHP2Sequences, type="optional")
+print(SHP2Opt)
+plot(SHP2Opt)
+
+#Something more interesting, cluster the data, fit two motif models, and
+# then calculate the residuals
+
+clusters <- aclust(dist(SHP2Sequences), 2)
+
+SHP2.M1 <- motifModel(SHP2Sequences[clusters[[1]],], type="fixed")
+SHP2.M2 <- motifModel(SHP2Sequences[clusters[[2]],], type="fixed")
+
+#Goodness of fit for model 1 and then using model 1 on the sequences in
+# model 2, which is obviously a bad fit
+
+#get threshold by including all sequences, no matter how bad the fit is.
+
+threshold <- min(predict(SHP2.M1))
+print(threshold)
+
+print(residuals(SHP2.M1), threshold=threshold)
+print(residuals(SHP2.M1, seqs=SHP2.M2@seqs, threshold=threshold))
+
+}
+
+\keyword{classes}
+\keyword{regression}

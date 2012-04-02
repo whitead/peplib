@@ -1,0 +1,72 @@
+\name{aclust}
+\alias{aclust}
+\docType{method}
+\title{
+aclust
+}
+\description{
+Clusters peptides using agglomerative clustering
+}
+\usage{
+aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans")
+}
+
+\arguments{
+  \item{sDistMatrix}{
+    \code{sDistMatrix} is a distance matrix resulting from call to
+  \code{dist(seqs)}, where \code{seqs} is a
+  \code{linkS4class{Sequences}} object}
+}
+  \item{clusterNumber}{
+    The number of clusters to create.
+}
+  \item{verbose}{
+    Controls how much logging information is printed.
+}
+  \item{type}{
+    There are two \code{type} options: \code{"kmeans"} and
+    \code{"agglomerative"}. \code{"kmeans"} causes \code{aclust} to call
+    the normal \code{\link{kmeans}} method available in
+  R. \code{"agglomerative"} uses a hierarchical clustering technique on
+  the distance matrix.
+    
+}
+}
+\details{
+During each round, the agglomerative clustering technique combines the points or sets of
+points which have the smallest distance to one another. The distance
+measure is the smallest pairwise distance between two sets of points.
+}
+\value{
+\code{aclust} returns a list where each element represents a
+cluster. Each element is an array of integers, where each integer is the
+index of sequence.
+}
+\references{
+%% ~put references to the literature/web site here ~
+}
+\author{
+Andrew White
+}
+\note{
+The "kmeans" is much much faster.
+}
+
+\seealso{
+\code{\linkS4class{Sequences}}, \code{\link{kmeans}}
+}
+\examples{
+
+#load some example data
+data(SHP2Sequences)
+
+##Cluster
+clusters <- aclust(dist(SHP2Sequences), 3)
+print(length(clusters[1]))
+print(length(clusters[2]))
+print(length(clusters[3]))
+
+}
+
+\keyword{ datagen }
+\keyword{ models }
