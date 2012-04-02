@@ -1,0 +1,8 @@
+importFrom("methods", setClass, setGeneric, setMethod, representation, new)
+exportClasses(Sequences, Descriptors, MetricParams, OOPS, SSOOPS, ZOOPS, MotifModelSet)
+export(default.MetricParams, descriptors, motifModel, aclust, motifModelSet, changeClusterFormat, ROC)
+importFrom("utils", data)
+importFrom("graphics", plot)
+importFrom("stats", dist, kmeans, residuals, logLik, predict)
+exportMethods(dist, plot, predict, logLik, print, residuals, FiveTwoCV, rbind, BIC, classify)
+S3method("rbind", Sequences)
