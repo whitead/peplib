@@ -141,7 +141,22 @@ SHP2desc <- descriptors(SHP2Sequences, do.var=FALSE,
 alags=c(), do.mean=TRUE, do.counts=FALSE,
 do.position=FALSE, include.statistics=FALSE)
 
+
+#plot them
 plot(SHP2desc)
+
+
+#get some descriptors and response sets
+data(AMPSequences)
+
+AMPdesc <- descriptors(SHP2Sequences, response=AMPdesc@.Data, do.var=FALSE,
+alags=c(), do.mean=TRUE, do.counts=FALSE,
+do.position=FALSE, include.statistics=FALSE)
+
+#plot with descriptors
+plot(AMPdesc)
+
+#Create a linear model after a PCA
 
 
 
