@@ -33,7 +33,7 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   \item{do.position}{Provide position specific descriptors}
   \item{alphabet}{The alphabet to use for calculating counts.}
   \item{include.statistics}{If \code{TRUE}, the function will calculate
-    the average and variance of the descriptors. See details.}
+    the p-values of the descriptors. See details.}
   \item{accuracy}{The accuracty of the computed statistics on the
     descriptors}
   }
@@ -65,12 +65,23 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   individual descriptors at a certain position. For example, number of
   hydrogen bond donors at position 2.
 
-  \code{include.staistics} attempts to calculate the mean and variance
-  of all possible peptides for the given sequence lengths. This is only
-  practical for smaller lengths, less than 10. The function will
-  continue randomly sampling peptide space until the standard error of
-  the sample mean and sample variances are less than than the given
-  accuracy (in parts per mean).
+  One often is more interested in understanding which what is common
+amongst the active sequences. This may be done by comparing a descriptor
+on the active sequences to the inactive sequences. Since inactive
+sequences are rarely collected in peptide libraries, we may approximate
+the inactive sequences as all sequences. {\bf This assumption only holds
+if there is a low number of active sequences}. This is often the case
+but must be observed during the experiment. With this assumption,
+p-values may be calculated for each descriptor. These p-values do not
+assume normality and are a measure of the overlap between the active
+sequences and inactive sequences. They are calculated using a
+Mann-Whitney two-sample A p-value below 0.05 is considered significant
+and such a desciptor may be considerd to be related to activity. {\bf
+Remember that a descriptor may be important in connect to a motif}. Thus
+it is important to do both modeling and motif discovery.
+\code{include.staistics} will calculate the p-values for each of the
+descriptors. This is the This is only practical for smaller lengths,
+less than 10.
 
   If \code{base.matrix} is \code{NA}, then the default will be used,
   \code{\link{defaultBaseMatrix}}. See the documentation on that dataset
@@ -129,7 +140,8 @@ Andrew White
 
 
 \seealso{
-\code{\linkS4class{Sequences}}, \code{\link{defaultBaseMatrix}}, \code{\link{FiveTwoCV}}
+\code{\linkS4class{Sequences}}, \code{\link{defaultBaseMatrix}},
+\code{\link{FiveTwoCV}}, \code{\link{wilcox.test}}
 }
 \examples{
 
@@ -148,8 +160,9 @@ plot(SHP2desc)
 
 #get some descriptors and response sets
 data(AMPSequences)
+data(AMPSequences.response)
 
-AMPdesc <- descriptors(SHP2Sequences, response=AMPdesc@.Data, do.var=FALSE,
+AMPdesc <- descriptors(AMPSequences, response=AMPSequences.response[,1], do.var=FALSE,
 alags=c(), do.mean=TRUE, do.counts=FALSE,
 do.position=FALSE, include.statistics=FALSE)
 

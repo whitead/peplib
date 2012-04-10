@@ -60,7 +60,7 @@ Class \code{"\linkS4class{vector}"}, by class "matrix", distance 4, with explici
     returns a list of metrics for how well the motifs fit. This method
     can be used, for example, in determining the number of motifs.}
     \item{plot}{\code{plot(seqs, clusterNumber=4,
-	params=default.MetricParams}: 
+	params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(dmat, clusterNumber))}: 
         This method plots a summary plot of the sequences. They are
         plotted on a projection onto their two principal components as found
         from the distance matrix. Additionally, they are colored and
@@ -71,7 +71,8 @@ Class \code{"\linkS4class{vector}"}, by class "matrix", distance 4, with explici
        also can be used to test different substitution matrices to see
        which best segregates data. For example, a BLOSUM95 substitution
        matrix may work well for very similar sequences, whereas a BLOSUM30
-       substitution matrix will work better for very different sequences. }
+       substitution matrix will work better for very different
+    sequences. The distance matrix may be specified and the clusters as well.}
     \item{rbind}{\code{rbind(seq1, seq2)}: This method just overwrites
     the traditional rbind method by passing the alphabet along. Note
     that most matrix methods editing methods do not return a Sequence

@@ -49,7 +49,7 @@ for creating the desrciptors of peptide sequences.
     \item{\code{RPSA}}{a combination of surface area and partial charge}
     \item{\code{nHBDon}}{number of hydrogen bond donors}
     \item{\code{nHBAcc}}{number of hydrogen bond acceptors}
-    \item{\code{TopoPSA}}{Ropological polar surface area based on fragment contributions}
+    \item{\code{TopoPSA}}{Topological polar surface area based on fragment contributions}
     \item{\code{XLogP}}{An estimate of the \code{logP} partition coefficient}
     \item{\code{fragC}}{a numeric vector}
     \item{\code{count.AcidicGroups}}{number of acidic groups}

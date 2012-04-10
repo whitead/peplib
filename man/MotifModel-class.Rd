@@ -5,6 +5,7 @@
 \alias{MotifModel}
 \alias{motifModel}
 \alias{plot,MotifModel-method}
+\alias{BIC,MotifModelSet-method}
 \alias{predict,MotifModel-method}
 \alias{print,MotifModel-method}
 \alias{residuals,MotifModel-method}
@@ -96,6 +97,8 @@ Objects can be created by calls of the form \code{motifModel(seqs,
       and if it is greater than the \code{threshold}, the sequence is classified as
       in the model. These predictions are tested against the true
       \code{classes} passed to the method.}
+    \item{BIC}{\code{BIC(object)}: Calculates the Bayesian Information Content of the motif
+	model. See \code{\link{BIC}} for more information.}
 
 }
 }
