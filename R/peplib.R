@@ -1,7 +1,7 @@
 #SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
 
 setClass("Sequences", representation(alphabet="character"), contains="matrix")
-setClass("Descriptors", representation(response="numeric", means="numeric", variances="numeric"), contains="data.frame")
+setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
 setClass("MotifModel", representation(mmodel="matrix", bmodel="numeric", width="integer", seqs="Sequences", np="integer"))
 setClass("MotifModelSet", representation(motifs="list"))
@@ -158,17 +158,15 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   return(seqs)
 }
 
-plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams) {
+plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber)) {
 
-  dmat <- dist.Sequences(seqs, params=params)
-  clusters <- aclust(dmat, clusterNumber)
   colors <- rep("black", nrow(seqs))
   shades <- colorRampPalette(c("black", "blue", "green", "orange", "red", "purple"))(clusterNumber)
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
 
-  fit <- cmdscale(dmat, eig=T, k=2)
+  fit <- cmdscale(distanceMatrix, eig=T, k=2)
   x <- fit$points[,1]
   y <- fit$points[,2]
   plot(x,y,pch=19, xlab="PC1", ylab="PC2", main="MDS of sequences", col=colors)
@@ -703,19 +701,28 @@ logLik.ZOOPS <- function(model) {
   return(logLik)
 }
 
+BIC.MotifModel <- function(object) {
+
+  motif <- object
+  logLik <- logLik(motif)
+  k <- k + motif@np
+  n <- n + motif@seqs
+  
+  return(-2 * logLik + k * log(n))
+}
 
 BIC.MotifModelSet <- function(object) {
 
   mset <- object
   logLik <- 0
-  k <- 0
-  n <- 0
+  k <- 0 #Number of parameters
+  n <- 0 #sample size
   for(i in 1:length(mset@motifs)) {
     logLik <- logLik + logLik(mset@motifs[[i]])
     k <- k + mset@motifs[[i]]@np
     n <- n + nrow(mset@motifs[[i]]@seqs)
   }
-
+  
   return(-2 * logLik + k * log(n))
 }
 
@@ -725,6 +732,7 @@ setMethod("logLik", "ZOOPS", function(object, ...) logLik.ZOOPS(object, ...))
 setMethod("logLik", "SSOOPS", function(object, ...) logLik.SSOOPS(object, ...))
 setGeneric("BIC", def=function(object) {standardGeneric("BIC")})
 setMethod("BIC", "MotifModelSet", function(object) BIC.MotifModelSet(object))
+setMethod("BIC", "MotifModel", function(object) BIC.MotifModel(object))
 
 
 factory.OOPS <- function(seqs, width=3) {
@@ -1023,7 +1031,19 @@ findMinDistElement <- function(sDistMatrix) {
 
 }
 
-descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=T, alags=c(1,2,3), do.mean=T, do.counts=T, do.position=T, alphabet=seqs@alphabet, include.statistics=T, accuracy=0.01) {
+simpleDescriptors <- function(seqs, response=numeric(0), include.statistics=FALSE) {
+
+  desc <- descriptors(seqs, response,
+  base.matrix=defaultBaseMatrix[,c("MW", "ALogP", "TopoPSA", "helix",
+  "nAromBond")], do.var=F, alags=c(), do.counts=F, do.mean=T,
+  do.position=F, include.statistics=include.statistics, accuracy=0.001)
+
+
+  return(desc)
+  
+}
+
+descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
 
   if(include.statistics) {
     if(ncol(seqs) >= 10) {
@@ -1151,6 +1171,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=T, ala
 
     cat("Standard Error and variances are currently unimplemented\nCalculting Means..\n.")
     dseqs <- decoys(seqs, 10 * nrow(seqs))
+    ddesc <- matrix(0, nrow=10 * nrow(seqs), ncol=ncol(desc))
     for(i in 1:nrow(dseqs)) {
       index <- 1
       for(j in 1:base.num) {
@@ -1161,40 +1182,47 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=T, ala
         cur.var <- var(cur.desc)
         
         if(do.mean) {
-          res[index] <- cur.mean
+          ddesc[i, index] <- cur.mean
           index <- index + 1
         }
         if(do.var) {
-          res[index] <- cur.var
+          ddesc[i, index] <- cur.var
           index <- index + 1
         }
         if(!is.null(alags)) {
           for(k in 1:length(alags)) {
-            res[index] <- autocorrelation(cur.desc, cur.mean, cur.var, lag=alags[k])
+            ddesc[i, index] <- autocorrelation(cur.desc, cur.mean, cur.var, lag=alags[k])
             index <- index + 1
           }
         }
         if(do.position){
           for(k in 1:ncol(dseqs)) {
-            res[index] <- cur.desc[k]
+            ddesc[i, index] <- cur.desc[k]
             index <- index + 1
           }
         }
       }
       if(do.counts) {
         for(j in 1:length(alphabet)) {
-          res[index] <- sum(dseqs[i,] == j)
+          ddesc[i, index] <- sum(dseqs[i,] == j)
           index <- index + 1
         }
-      }
-      if(sum(which(desc.var == 0)) > 0) {
-        desc@means <- desc@means + res[-which(desc.var == 0)]
-      } else {
-        desc@means <- desc@means + res
-      }
+      }      
     }
-    desc@means <- desc@means / (nrow(dseqs))
-    
+
+    #Calculate estimated p-values, the amount of overlap between the two distributions using Mann-Whitney test
+    index <- 1
+    for(i in 1:ncol(ddesc)) {
+      if(desc.var[i] != 0) {
+        x <- ddesc[,i]
+        y <- desc[,i]
+        print(x)
+        print(y)
+        p.value <- wilcox.test(x,y)$p.value
+        desc@pvalues[index] <- p.value
+        index <- index + 1
+      }
+    }    
   }
   
   
@@ -1225,8 +1253,8 @@ autocorrelation <- function(data,ef=mean(data), v=var(data), lag=1) {
                                     
 factory.descriptor <- function(data) {
 
-  d <- new("Descriptors", data@.Data, row.names=rownames(data), names=colnames(data), response=numeric(0), means=rep(0, ncol(data)), variances=rep(0, ncol(data)))
-  names(d@means) <- colnames(data)
+  d <- new("Descriptors", data@.Data, row.names=rownames(data), names=colnames(data), response=numeric(0), pvalues=rep(0, ncol(data)))
+  names(d@pvalues) <- colnames(data)
   return(d)
   
 }
@@ -1237,6 +1265,7 @@ empty.df <- function(cnames, rnames, default=NA) {
   rownames(df) <- rnames
   return(df)
 }
+
 
 plot.Descriptors <- function(desc,...) {
 
