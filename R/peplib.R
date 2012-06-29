@@ -1,5 +1,4 @@
 #SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
-
 setClass("Sequences", representation(alphabet="character"), contains="matrix")
 setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
@@ -95,6 +94,9 @@ sHammingDist <- function(s1, s2) {
 }
 
 dist.Sequences <- function(seqs, method="substitution", params=default.MetricParams, ...) {
+                                        #for speed, get rid of all that generics stuff
+  seqs <- seqs@.Data
+  
   if(method == "substitution" || method=="euclidian") {
     dist <- sDist
   }
@@ -124,6 +126,16 @@ dist.Sequences <- function(seqs, method="substitution", params=default.MetricPar
 
 setGeneric("dist")
 setMethod("dist", "Sequences", function(x, method="euclidian", diag=F, upper=F, p=2) dist.Sequences(x, method))
+setMethod("[", signature=c("Sequences"), definition=function(x, i, j, ..., drop) {
+  if(missing(j)) {
+    new("Sequences", x@.Data[i,], alphabet=x@alphabet)
+  } else if(missing(i)) {
+    new("Sequences", x@.Data[,j], alphabet=x@alphabet)
+  } else {
+    x@.Data[i,j]
+  }
+} )
+
 
 wdist <- function(seqmatrix, sweights=NULL, dist=sDist, params=default.MetricParams) {
   if(is.null(sweights)){
@@ -165,7 +177,7 @@ plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, d
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
-
+  
   fit <- cmdscale(distanceMatrix, eig=T, k=2)
   x <- fit$points[,1]
   y <- fit$points[,2]
@@ -195,18 +207,6 @@ createSWeights <- function(seqmatrix, params=default.MetricParams) {
   }
 
   return(sweights)
-}
-
-shannonPWeights <- function(seqmatrix) {
-
-  pweights <- rep(0, ncol(seqmatrix))
-  tables <- apply(seqmatrix, MARGIN=2, FUN=function(x) table(x))
-  for(i in 1:length(tables)) {
-    pweights[i] <- sum(sapply(tables[[i]], FUN=function(x) - as.double(x) / sum(tables[[i]]) * log(as.double(x) / sum(tables[[i]]))))
-  }
-
-  return(pweights)
-
 }
 
 motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=10)  {
@@ -838,6 +838,45 @@ plot.MotifModelSet <- function(x,...) {
   
 }
 
+plot.MotifModel.motifStartingPosition <- function(motifModel) {
+
+  par(fg="dark gray")
+  if(class(motifModel) == "SSOOPS") {
+    zsum <- motifModel@zvector
+  } else {
+    zsum <- apply(motifModel@zmatrix, MARGIN=2, FUN=sum)
+  }
+  barplot(zsum, names.arg=as.character(1:length(zsum)), main="", col=hcl(h=1:length(zsum) * (360 / length(zsum))), border="black")
+
+}
+
+plot.MotifModel.motifs <- function(motifModel) {
+
+  par(mfrow=c(ceiling(motifModel@width / 2),2), mar=c(3,3,2,2), cex=0.7)
+  for(i in 1:motifModel@width) {
+    barplot(motifModel@mmodel[,i], main=paste("Motif Position", i), col=hcl(h=1:ncol(motifModel@seqs) * (360 / ncol(motifModel@seqs))), border="black")
+  }
+  par(mfrow=c(1,1))
+}
+
+plot.MotifModel.fit <- function(motifModel) {
+
+  par(fg="dark gray")
+  predictions <- sort(predict(motifModel), decreasing=T)
+  ncol <- 50
+  colsGood <- colorRampPalette(c("white", "green", "green"))(50)
+  colsBad <-  colorRampPalette(c("red", "red", "white"))(50)
+  cols <- c()
+  if(sum(predictions > 0) > 0) {
+    cols <- c(colsGood[cut(predictions[predictions > 0], breaks=ncol, labels=F)])
+  }
+  if(sum(predictions < 0) > 0) {
+    cols <- c(cols, colsBad[cut(predictions[predictions < 0], breaks=ncol, labels=F)])
+  }
+  barplot(predictions, names.arg=NULL, main="", col=cols)
+
+}
+
 setMethod("plot", "MotifModelSet", function(x, y, ...) plot.MotifModelSet(x,...))
 
 plot.MotifModel <- function(x,...) {
@@ -874,7 +913,7 @@ plot.MotifModel <- function(x,...) {
 
 setMethod("plot", "MotifModel", function(x, y, ...) plot.MotifModel(x,...))
 
-aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans") {	   
+aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=20) {	   
 
   if(class(sDistMatrix) == "Sequences") {
     sDistMatrix <- dist(sDistMatrix)
@@ -886,7 +925,7 @@ aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans") {
   
   if(type == "kmeans") {
 
-    km <- kmeans(sDistMatrix, centers=clusterNumber, nstart=20)
+    km <- kmeans(sDistMatrix, centers=clusterNumber, nstart=knstart)
     result <- vector(mode="list", length=clusterNumber)
     for(i in 1:clusterNumber) {
       result[[i]] <- which(km$cluster == i)

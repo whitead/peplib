@@ -69,14 +69,14 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
 amongst the active sequences. This may be done by comparing a descriptor
 on the active sequences to the inactive sequences. Since inactive
 sequences are rarely collected in peptide libraries, we may approximate
-the inactive sequences as all sequences. {\bf This assumption only holds
+the inactive sequences as all sequences. \bold{ This assumption only holds
 if there is a low number of active sequences}. This is often the case
 but must be observed during the experiment. With this assumption,
 p-values may be calculated for each descriptor. These p-values do not
 assume normality and are a measure of the overlap between the active
 sequences and inactive sequences. They are calculated using a
 Mann-Whitney two-sample A p-value below 0.05 is considered significant
-and such a desciptor may be considerd to be related to activity. {\bf
+and such a desciptor may be considerd to be related to activity. \bold{
 Remember that a descriptor may be important in connect to a motif}. Thus
 it is important to do both modeling and motif discovery.
 \code{include.staistics} will calculate the p-values for each of the
@@ -105,6 +105,10 @@ less than 10.
       descriptor names (inherited from \code{data.frame}).}
     \item{\code{row.names}:}{Object of class \code{"data.frameRowLabels"}}
     \item{\code{.S3Class}:}{Object of class \code{"character"} }
+    \item{\code{pvalues}:}{Object of class \code{"numeric"} An optional
+      array containing estimated p-values for each descriptor. The
+      p-value represents how different the descriptor set is as compared
+      to a set of random peptides of the same length WITHOUT GAPS.}
   }
 }
 \section{Extends}{

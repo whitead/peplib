@@ -38,7 +38,7 @@ simpleDescriptors(seqs, response = numeric(0), include.statistics = FALSE)
   Andrew White
 }
 \seealso{
-  \code\linkS4class{Descriptors}
+  \code{\linkS4class{Descriptors}}
 }
 \examples{
 

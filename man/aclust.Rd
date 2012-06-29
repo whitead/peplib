@@ -15,7 +15,8 @@ aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans")
   \item{sDistMatrix}{
     \code{sDistMatrix} is a distance matrix resulting from a call to
   \code{dist(seqs)}, where \code{seqs} is a
-  \code{\linkS4class{Sequences}} object
+  \code{\linkS4class{Sequences}} object. You may also just pass the
+  sequences and a call to \code{dist} will be done automatically.
 }
   \item{clusterNumber}{
     The number of clusters to create.
