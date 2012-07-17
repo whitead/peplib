@@ -170,10 +170,39 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   return(seqs)
 }
 
+
+#this will allow the writing of sequences to a file, utilizing R's
+#built in write.table method If you pass a motifModel along with the
+#sequences, then it will align and output the motifs from the
+#sequences.
+write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, quote = TRUE, sep = " ",
+                 eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+                 col.names = TRUE, qmethod = c("escape", "double"),
+                 fileEncoding = "") {
+
+  if(!is.null(motifModel)) {
+
+    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))
+    
+    for(i in 1:nrow(seqs)) {
+      startPos <- which.max(motifModel@zmatrix[i, ])
+      outSeqs[i,] <- sapply(seqs[i, startPos:(startPos + motifModel@width)], function(x) {seqs@alphabet[x]})
+    }
+
+    seqs <- outSeqs
+  }
+  
+  write.table(seqs, file=file, append=append, quote=quote, sep=sep, eol=eol,
+              na=na, dec=dec, row.names=row.names,
+              col.names = col.names, qmethod=qmethod,
+              fileEncoding=fileEncoding)
+  
+}
+
 plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber)) {
 
   colors <- rep("black", nrow(seqs))
-  shades <- colorRampPalette(c("black", "blue", "green", "orange", "red", "purple"))(clusterNumber)
+  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=75, l=70 )
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
@@ -181,8 +210,7 @@ plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, d
   fit <- cmdscale(distanceMatrix, eig=T, k=2)
   x <- fit$points[,1]
   y <- fit$points[,2]
-  plot(x,y,pch=19, xlab="PC1", ylab="PC2", main="MDS of sequences", col=colors)
-
+  plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
 }
 
 setGeneric("plot")
@@ -209,18 +237,18 @@ createSWeights <- function(seqmatrix, params=default.MetricParams) {
   return(sweights)
 }
 
-motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=10)  {
+motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=15)  {
   
   if(is.na(motifNumber)) {
     cat("Guessing cluster number, this could take a while...\n")
-    bic <- data.frame(clusterN=1:maxGuess, BIC=rep(0, maxGuess))
+    ll <- data.frame(clusterN=1:maxGuess, logLik=rep(0, maxGuess))
     for(i in 1:maxGuess) {
       cat(paste("\r", i, "/", maxGuess))
-      bic$BIC[i] <- BIC(motifModelSet(seqs, i, type, width, verbose, clusterType))
+      ll$logLik[i] <- logLik(motifModelSet(seqs, i, type, width, verbose, clusterType))
     }
     cat("\n")
-    plot(bic, xlab="Cluster Number", pch=19)
-    motifNumber <- bic$clusterN[which.min(bic$BIC)]
+    plot(ll, xlab="Cluster Number", pch=19)
+    motifNumber <- ll$clusterN[which.min(ll$logLik)]
   }
   if(motifNumber == 1) {
     return(new("MotifModelSet", motifs=list(motifModel(seqs, type, width))))
@@ -418,11 +446,12 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
     
   }
 
-  for(i in 1:length(models)) {
-    for(j in 1:length(models[[i]]@bmodel)) {
-      models[[i]]@bmodel[j] <- bcounts[j] / bsum      
-    }
-  }
+  #I don't think this is the correct background model, since each amino acid is represented equally in the peptide library.
+#  for(i in 1:length(models)) {
+#    for(j in 1:length(models[[i]]@bmodel)) {
+#      models[[i]]@bmodel[j] <- bcounts[j] / bsum      
+#    }
+#  }
 
   return(models)
   
@@ -476,10 +505,10 @@ EMStep.SSOOPS <- function(model, seqs) {
        }
  }
   }
-
-  for(i in 1:length(model@bmodel)) {
-    model@bmodel[i] <- bcounts[i] / bsum
-  }
+  #I don't think this is the correct background model, since each amino acid is represented equally in the peptide library.
+#  for(i in 1:length(model@bmodel)) {
+#    model@bmodel[i] <- bcounts[i] / bsum
+#  }
   
   for(i in 1:nrow(model@mmodel)) {
     for(j in 1:ncol(model@mmodel)) {
@@ -538,10 +567,10 @@ EMStep.OOPS <- function(model, seqs) {
        }
      }
   }
-
-  for(i in 1:length(model@bmodel)) {
-    model@bmodel[i] <- bcounts[i] / bsum
-  }
+  #I don't think this is the correct background model, since each amino acid is represented equally in the peptide library.
+#  for(i in 1:length(model@bmodel)) {
+#    model@bmodel[i] <- bcounts[i] / bsum
+# }
   for(i in 1:nrow(model@mmodel)) {
     for(j in 1:ncol(model@mmodel)) {
       model@mmodel[i, j] <- mcounts[i,j] / msums[j]
@@ -606,10 +635,10 @@ EMStep.ZOOPS <- function(model, seqs) {
        }
      }
   }
-
-  for(i in 1:length(model@bmodel)) {
-    model@bmodel[i] <- bcounts[i] / bsum
-  }
+  #I don't think this is the correct background model, since each amino acid is represented equally in the peptide library.
+#  for(i in 1:length(model@bmodel)) {
+#    model@bmodel[i] <- bcounts[i] / bsum
+#  }
   for(i in 1:nrow(model@mmodel)) {
     for(j in 1:ncol(model@mmodel)) {
       model@mmodel[i, j] <- mcounts[i,j] / msums[j]
@@ -726,10 +755,22 @@ BIC.MotifModelSet <- function(object) {
   return(-2 * logLik + k * log(n))
 }
 
+logLik.MotifModelSet <- function(object) {
+
+  mset <- object
+  logLik <- 0
+  for(i in 1:length(mset@motifs)) {
+    logLik <- logLik + logLik(mset@motifs[[i]])
+  }
+  
+  return(logLik)
+}
+
 setGeneric("logLik")
 setMethod("logLik", "OOPS", function(object, ...) logLik.OOPS(object,...))
 setMethod("logLik", "ZOOPS", function(object, ...) logLik.ZOOPS(object, ...))
 setMethod("logLik", "SSOOPS", function(object, ...) logLik.SSOOPS(object, ...))
+setMethod("logLik", "MotifModelSet", function(object, ...) logLik.MotifModelSet(object, ...))
 setGeneric("BIC", def=function(object) {standardGeneric("BIC")})
 setMethod("BIC", "MotifModelSet", function(object) BIC.MotifModelSet(object))
 setMethod("BIC", "MotifModel", function(object) BIC.MotifModel(object))
