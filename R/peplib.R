@@ -1,4 +1,4 @@
-#SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
+>#SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
 setClass("Sequences", representation(alphabet="character"), contains="matrix")
 setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
@@ -181,22 +181,55 @@ write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, 
                  fileEncoding = "") {
 
   if(!is.null(motifModel)) {
-
-    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))
     
+    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))    
     for(i in 1:nrow(seqs)) {
       startPos <- which.max(motifModel@zmatrix[i, ])
-      outSeqs[i,] <- sapply(seqs[i, startPos:(startPos + motifModel@width)], function(x) {seqs@alphabet[x]})
+      outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
     }
 
     seqs <- outSeqs
   }
+
+  for(i in 1:nrow(seqs)) {
+      seqs[i,] <- sapply(seqs[i, ], function(x) {seqs@alphabet[x]})
+    }
+
   
   write.table(seqs, file=file, append=append, quote=quote, sep=sep, eol=eol,
               na=na, dec=dec, row.names=row.names,
               col.names = col.names, qmethod=qmethod,
               fileEncoding=fileEncoding)
   
+}
+
+write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
+
+
+  if(!is.null(motifModel)) {
+    
+    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))    
+    for(i in 1:nrow(seqs)) {
+      startPos <- which.max(motifModel@zmatrix[i, ])
+      outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
+    }
+
+    seqs <- outSeqs
+  }
+
+  for(i in 1:nrow(seqs)) {
+      seqs[i,] <- sapply(seqs[i, ], function(x) {seqs@alphabet[x]})
+    }
+
+                                        #convert the the fixed 80 width format
+  for(i in 1:nrow(seqs)) {
+    
+    write(paste(">", i, eol))
+    write(paste(seqs,eol, sep=""))
+    
+  }
+
+
 }
 
 plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber)) {
