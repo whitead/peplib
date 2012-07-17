@@ -1,7 +1,7 @@
 importFrom("methods", setClass, setGeneric, setMethod, representation, new)
 exportClasses(Sequences, Descriptors, MetricParams, OOPS, SSOOPS, ZOOPS, MotifModelSet)
 export(default.MetricParams, descriptors, simpleDescriptors, motifModel, aclust, motifModelSet, changeClusterFormat, ROC, plot.MotifModel.motifStartingPosition, plot.MotifModel.motifs, plot.MotifModel.fit,
-       read.sequences)
+       read.sequences, write.sequences, write.fasta)
 importFrom("utils", data)
 importFrom("graphics", plot)
 importFrom("stats", dist, kmeans, residuals, logLik, predict)

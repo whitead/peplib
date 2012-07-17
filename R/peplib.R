@@ -1,4 +1,4 @@
->#SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
+#SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
 setClass("Sequences", representation(alphabet="character"), contains="matrix")
 setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
@@ -175,28 +175,31 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
 #built in write.table method If you pass a motifModel along with the
 #sequences, then it will align and output the motifs from the
 #sequences.
-write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, quote = TRUE, sep = " ",
-                 eol = "\n", na = "NA", dec = ".", row.names = TRUE,
-                 col.names = TRUE, qmethod = c("escape", "double"),
+write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, quote = FALSE, sep = " ",
+                 eol = "\n", na = "NA", dec = ".", row.names = FALSE,
+                 col.names = FALSE, qmethod = c("escape", "double"),
                  fileEncoding = "") {
 
   if(!is.null(motifModel)) {
     
-    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))    
-    for(i in 1:nrow(seqs)) {
-      startPos <- which.max(motifModel@zmatrix[i, ])
-      outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
+    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))
+    if(class(motifModel) == "SSOOPS") {
+      startPos <- which.max(motifModel@zvector)
+      
+      outSeqs <- seqs[, startPos:(startPos + motifModel@width - 1)]
+    } else {
+      for(i in 1:nrow(seqs)) {
+        startPos <- which.max(motifModel@zmatrix[i, ])
+        outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
+      }
     }
-
     seqs <- outSeqs
-  }
-
-  for(i in 1:nrow(seqs)) {
-      seqs[i,] <- sapply(seqs[i, ], function(x) {seqs@alphabet[x]})
-    }
+  } 
 
   
-  write.table(seqs, file=file, append=append, quote=quote, sep=sep, eol=eol,
+  output <- apply(seqs, MARGIN=1, FUN=function(x) {paste(seqs@alphabet[x], collapse="")})
+  
+  write.table(output, file=file, append=append, quote=quote, sep=sep, eol=eol,
               na=na, dec=dec, row.names=row.names,
               col.names = col.names, qmethod=qmethod,
               fileEncoding=fileEncoding)
@@ -208,27 +211,28 @@ write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
 
   if(!is.null(motifModel)) {
     
-    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))    
-    for(i in 1:nrow(seqs)) {
-      startPos <- which.max(motifModel@zmatrix[i, ])
-      outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
+    outSeqs <- matrix(0, ncol=motifModel@width, nrow=nrow(seqs))
+    if(class(motifModel) == "SSOOPS") {
+      startPos <- which.max(motifModel@zvector)
+      
+      outSeqs <- seqs[, startPos:(startPos + motifModel@width - 1)]
+    } else {
+      for(i in 1:nrow(seqs)) {
+        startPos <- which.max(motifModel@zmatrix[i, ])
+        outSeqs[i,] <- seqs[i, startPos:(startPos + motifModel@width)]
+      }
     }
-
     seqs <- outSeqs
   }
 
-  for(i in 1:nrow(seqs)) {
-      seqs[i,] <- sapply(seqs[i, ], function(x) {seqs@alphabet[x]})
-    }
+  output <- apply(seqs, MARGIN=1, FUN=function(x) {paste(seqs@alphabet[x], collapse="")})
 
-                                        #convert the the fixed 80 width format
-  for(i in 1:nrow(seqs)) {
+  for(i in 1:length(output)) {
     
-    write(paste(">", i, eol))
-    write(paste(seqs,eol, sep=""))
+    write(paste(">", i), file=file, append=T)
+    write(paste(output[i]), file=file, append=T)
     
   }
-
 
 }
 
