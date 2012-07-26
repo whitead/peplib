@@ -229,7 +229,7 @@ write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
 
   for(i in 1:length(output)) {
     
-    write(paste(">", i), file=file, append=T)
+    write(paste("> Sequence", i), file=file, append=T)
     write(paste(output[i]), file=file, append=T)
     
   }
@@ -506,7 +506,7 @@ EMStep.SSOOPS <- function(model, seqs) {
   bcounts <- rep(1,length(model@bmodel))
   mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
-  rownames(mcounts) <- alphabet[-length(alphabet)]
+  rownames(mcounts) <- alphabet
 
   bsum <- length(model@bmodel)
   msums <- rep(nrow(model@mmodel), ncol(mcounts))
@@ -570,7 +570,7 @@ EMStep.OOPS <- function(model, seqs) {
   bcounts <- rep(1,length(model@bmodel))
   mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
-  rownames(mcounts) <- alphabet[-length(alphabet)]
+  rownames(mcounts) <- alphabet
 
   bsum <- length(model@bmodel)
   msums <- rep(nrow(model@mmodel), ncol(mcounts))
@@ -630,7 +630,7 @@ EMStep.ZOOPS <- function(model, seqs) {
   bcounts <- rep(1,length(model@bmodel))
   mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
-  rownames(mcounts) <- alphabet[-length(alphabet)]
+  rownames(mcounts) <- alphabet
 
   bsum <- length(model@bmodel)
   msums <- rep(nrow(model@mmodel), ncol(mcounts))
@@ -719,7 +719,6 @@ logLik.SSOOPS <- function(model) {
 
   logLik <- 0
   for(i in 1:nrow(model@seqs)) {
-  
     pseq <- 0
     for(j in 1:ncol(model@seqs)) {
       if(j + model@width - 1 <= ncol(model@seqs)) {
@@ -818,14 +817,14 @@ factory.OOPS <- function(seqs, width=3) {
   
   model <- new("OOPS",
                zmatrix=matrix(rep(c(1,rep(0,ncol(seqs) - width + 1)), nrow(seqs)), nrow=nrow(seqs)),
-               mmodel=matrix(rep(1.0/(length(alphabet) - 1),(length(alphabet) - 1) * width), ncol=width),
+               mmodel=matrix(rep(1.0/length(alphabet),length(alphabet) * width), ncol=width),
                bmodel=rep(1.0/length(alphabet),length(alphabet)), width=as.integer(width),
                seqs=seqs)
 
   model@np <- length(model@zmatrix) + length(model@mmodel)
   
   names(model@bmodel) <- alphabet
-  rownames(model@mmodel) <- alphabet[-length(alphabet)]
+  rownames(model@mmodel) <- alphabet
   return(model)
 }
 
@@ -834,7 +833,7 @@ factory.SSOOPS <- function(seqs, width=3) {
 
   model <- new("SSOOPS",
                zvector=rep(1./width, ncol(seqs) - width + 1),
-               mmodel=matrix(rep(1.0/(length(alphabet) - 1),(length(alphabet) - 1) * width), ncol=width),
+               mmodel=matrix(rep(1.0/length(alphabet),length(alphabet) * width), ncol=width),
                bmodel=rep(1.0/length(alphabet),length(alphabet)),
                width=as.integer(width),
                seqs=seqs)
@@ -842,7 +841,7 @@ factory.SSOOPS <- function(seqs, width=3) {
   model@np <- length(model@zvector) + length(model@mmodel)
   
   names(model@bmodel) <- alphabet
-  rownames(model@mmodel) <- alphabet[-length(alphabet)]
+  rownames(model@mmodel) <- alphabet
   return(model)
 }
 
@@ -851,7 +850,7 @@ factory.ZOOPS <- function(seqs, width=3) {
 
   model <- new("ZOOPS",
                zmatrix=matrix(rep(c(1,rep(0,ncol(seqs) - width + 1)), nrow(seqs)), nrow=nrow(seqs), byrow=T),
-               mmodel=matrix(rep(1.0/(length(alphabet) - 1),(length(alphabet) - 1) * width), ncol=width),
+               mmodel=matrix(rep(1.0/length(alphabet),length(alphabet) * width), ncol=width),
                bmodel=rep(1.0/length(alphabet),length(alphabet)),
                width=as.integer(width),
                gamma=0.5,
@@ -859,7 +858,7 @@ factory.ZOOPS <- function(seqs, width=3) {
                seqs=seqs)
   model@np <- length(model@zmatrix) + length(model@mmodel) + length(model@qarray)
   names(model@bmodel) <- alphabet
-  rownames(model@mmodel) <- alphabet[-length(alphabet)]
+  rownames(model@mmodel) <- alphabet
   return(model)
 }
 
