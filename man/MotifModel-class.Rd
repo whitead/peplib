@@ -5,7 +5,7 @@
 \alias{MotifModel}
 \alias{motifModel}
 \alias{plot,MotifModel-method}
-\alias{BIC,MotifModelSet-method}
+\alias{BIC,MotifModel-method}
 \alias{predict,MotifModel-method}
 \alias{print,MotifModel-method}
 \alias{residuals,MotifModel-method}
@@ -14,7 +14,7 @@
 \description{
 This is a simple implementation of the MEME motif finding algorithm. The
 MEME algorihtm uses an Expetation-Maximimization search for motifs on
-sequences (\code{\linkS4class{Sequnces}}). It requires a choice of the
+sequences (\code{\linkS4class{Sequences}}). It requires a choice of the
 motif length. For multiple motifs see \code{\link{MotifModelSet}}
 }
 \section{Objects from the Class}{
@@ -98,7 +98,9 @@ Objects can be created by calls of the form \code{motifModel(seqs,
       in the model. These predictions are tested against the true
       \code{classes} passed to the method.}
     \item{BIC}{\code{BIC(object)}: Calculates the Bayesian Information Content of the motif
-	model. See \code{\link{BIC}} for more information.}
+      model. See \code{\link{BIC}} for more information.}
+    \item{motifString}{\code{motifString(model)}: Displays the most
+	likely motif from the motif model.}
 
 }
 }

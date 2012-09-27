@@ -7,7 +7,7 @@ Function "simpleDescriptors"
 \description{
 This produces a \code{\linkS4class{Descriptors}} which is smaller and
 more simple than those produced by a call to the normal method for
-producing descriptors, \code{\link{descriptor}}.
+producing descriptors, \code{\link{Descriptors}}.
 }
 \usage{
 simpleDescriptors(seqs, response = numeric(0), include.statistics = FALSE)

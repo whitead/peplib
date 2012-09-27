@@ -1,6 +1,6 @@
 \name{aclust}
 \alias{aclust}
-\docType{method}
+
 \title{
 aclust
 }
@@ -8,7 +8,8 @@ aclust
 Clusters a matrix of peptide sequences using agglomerative clustering
 }
 \usage{
-aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans")
+aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans", knstart
+= 20)
 }
 
 \arguments{
@@ -30,8 +31,11 @@ aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans")
     the normal \code{\link{kmeans}} method available in
   R. \code{"agglomerative"} uses a hierarchical clustering technique on
   the distance matrix.
-    
-}
+  }
+  \item{knstart}{
+    The number of times to execute the \code{"kmeans"} algorithm to
+  ensure a global minimum is reached.
+  }
 }
 \details{
 During each round, the agglomerative clustering technique combines the points or sets of

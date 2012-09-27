@@ -4,15 +4,15 @@
 \alias{Descriptors}
 \alias{descriptors}
 \alias{Descriptors-class}
-\alias{FiveTwoCV,Descriptors-method}
+%%\alias{FiveTwoCV,Descriptors-method}
 \alias{plot,Descriptors-method}
 
 \title{Class "Descriptors"}
 \description{
 The descriptors class is an extension to the \code{data.frame} class and
 contains, in addition to the descriptors, information about any response
-data as well as the means and variances of the descriptors over the peptide
-space. The class should be created by a call to \code{descriptors} (see
+data and p-values which describe the difference between the sequences
+vs. the space of possible sequence . The class should be created by a call to \code{descriptors} (see
 arguments and details below).
 }
 \section{Objects from the Class}{
@@ -25,8 +25,9 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
     sequence. \code{nrow(seqs)} should equal to \code{length(response)}.}
   \item{base.matrix}{A \code{data.frame} containing descriptors
     calculated on each amino acid. See details.}
-  \item{do.var}{Calculate the variance of the descriptors along the sequence}
-  \item{do.mean}{Calculate the mean of the descriptors along the
+  \item{do.var}{Calculate the additional descriptors which are the
+    variance of single residue descriptors along the sequence}
+  \item{do.mean}{Calculate the mean of the single residue descriptors along the
     sequence}
   \item{do.counts}{Provide descriptors of various counts, like the
     number of each residue type}
@@ -45,43 +46,47 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   it relies on making various permutations of descriptors calculated on
   single amino acids. There are two reasons for this. First, it is easy
   to calculate descriptors quickly, without relying on another
-  program. Second, it is easier to treat calculating means and variances
-  over the sequence space. For example, at small pepitde chain lengths,
-  it is feasible to estimate the mean and variance of the full peptide
-  space and then discover if any of the descriptor averages are
-  significant among the descriptors considered. For example, if the
-  number of hydrogen bond donors is three standard deviations above the
-  mean number of hydrogen bond donors over all sequence space, then that
-  is a significant descriptor.
+  program. Second, it is easier to treat calculating the distribution of
+  the descripotrs the sequence space. This obviously depends on the
+  number of descriptors and the chain length of the sequence. For
+  example, if the number of hydrogen bond donors is three standard
+  deviations above the mean number of hydrogen bond donors over all
+  sequence space, then that is a significant descriptor. This is
+  expressed as a p-value, which is coming from a
+  \code{\link{wilcox.test}}. That is a non-parametric version of the
+  Student's t-test.
 
   The calculations are based on the given \code{base.matrix}
   parameter. Given that matrix, which contains the descriptors
   calculated on all the individual amino acids, it is possible to
   calculate many sequence level descriptors. If the means are being
-  calculated, then the mean of the descriptors for each sequence is
-  calculated. Same with variance. The autocorrelation function can also
-  be calculated along the chain. This may be interesting for describing
-  alternating patterns. The position specific descriptors are simply the
-  individual descriptors at a certain position. For example, number of
-  hydrogen bond donors at position 2.
+  calculated (\code{do.mean=true}), then the mean of the descriptors for
+  each sequence is calculated. This doubles the number of
+  descriptors. The same is true of the \code{do.var}, which uses
+  variance along the sequence. The autocorrelation function can also be
+  calculated along the chain, again increasing the number of resulting
+  descriptors. This may be interesting for describing alternating
+  patterns. The position specific descriptors are simply the individual
+  descriptors at a certain position. For example, number of hydrogen
+  bond donors at position 2.
 
   One often is more interested in understanding which what is common
 amongst the active sequences. This may be done by comparing a descriptor
 on the active sequences to the inactive sequences. Since inactive
 sequences are rarely collected in peptide libraries, we may approximate
-the inactive sequences as all sequences. \bold{ This assumption only holds
-if there is a low number of active sequences}. This is often the case
-but must be observed during the experiment. With this assumption,
-p-values may be calculated for each descriptor. These p-values do not
-assume normality and are a measure of the overlap between the active
-sequences and inactive sequences. They are calculated using a
-Mann-Whitney two-sample A p-value below 0.05 is considered significant
-and such a desciptor may be considerd to be related to activity. \bold{
-Remember that a descriptor may be important in connect to a motif}. Thus
-it is important to do both modeling and motif discovery.
-\code{include.staistics} will calculate the p-values for each of the
-descriptors. This is the This is only practical for smaller lengths,
-less than 10.
+the inactive sequences as all sequences. \bold{ This assumption only
+holds if there is a low number of active sequences relative to the size
+of the sequence diversity}. This is often the case but must be observed
+during the experiment. With this assumption, p-values may be calculated
+for each descriptor. These p-values do not assume normality and are a
+measure of the overlap between the active sequences and inactive
+sequences. They are calculated using a Wilcox t-test. A low p-value is
+considered significant and such a desciptor may be considerd to be
+related to activity. \bold{ Remember that a descriptor may be important
+in connection to a motif}. Thus it is important to do both descriptors
+and motif discovery.  \code{include.staistics} will calculate the
+p-values for each of the descriptors. This is only practical for smaller
+lengths, less than 10.
 
   If \code{base.matrix} is \code{NA}, then the default will be used,
   \code{\link{defaultBaseMatrix}}. See the documentation on that dataset
@@ -95,12 +100,6 @@ less than 10.
     sequence}
     \item{\code{response}:}{Object of class \code{"numeric"} An optional
     numeric array containing responses for the sequences.}
-    \item{\code{means}:}{Object of class \code{"numeric"} The estimated
-      means of the descritpros over the sequence space. Used for testing
-    significance levels, etc.}
-    \item{\code{variances}:}{Object of class \code{"numeric"} The
-      estimated variances over the sequence space. Used for testing
-      significance levels.}
     \item{\code{names}:}{Object of class \code{"character"} The
       descriptor names (inherited from \code{data.frame}).}
     \item{\code{row.names}:}{Object of class \code{"data.frameRowLabels"}}
@@ -117,26 +116,26 @@ Class \code{"\linkS4class{list}"}, by class "data.frame", distance 2.
 Class \code{"\linkS4class{oldClass}"}, by class "data.frame", distance 2.
 Class \code{"\linkS4class{vector}"}, by class "data.frame", distance 3.
 }
-\section{Methods}{
-  \describe{
-    \item{FiveTwoCV}{\code{FiveTwoCV(desc, resp=desc@response,
-	modelFxn)}: This method provides a way to preform 5x2
-      cross-validation on the modelling function \code{modelFxn} on the
-      descriptors. See \link{FiveTwoCV} for more information about the
-      cross-validation and model function. }
-    \item{plot}{\code{plot(desc,...)}:
-      This method makes a few plots used for exploring the descriptor
-      space. First, if there is response for each sequence, a histogram
-      of the correlation of the response with the descriptors is
-      plotted. Next, a barplot showing the most correlated descriptors
-      (with the response) are plotted. A PCA is then preformed and a
-      scree plot is shown, a projection onto the top PCAs, and finally a
-      biplot. The scree plot and projection can help you judge if a few
-      principal components can describe your dataset and the biplot can
-      show you which descriptors are actually spreading out your sequences.
-    }
-	 }
-}
+%%\section{Methods}{
+%%  \describe{
+%%    \item{FiveTwoCV}{\code{FiveTwoCV(desc, resp=desc@response,
+%%	modelFxn)}: This method provides a way to preform 5x2
+%%      cross-validation on the modelling function \code{modelFxn} on the
+%%      descriptors. See \link{FiveTwoCV} for more information about the
+%%      cross-validation and model function. }
+%%    \item{plot}{\code{plot(desc,...)}:
+%%      This method makes a few plots used for exploring the descriptor
+%%      space. First, if there is response for each sequence, a histogram
+%%      of the correlation of the response with the descriptors is
+%%      plotted. Next, a barplot showing the most correlated descriptors
+%%      (with the response) are plotted. A PCA is then preformed and a
+%%      scree plot is shown, a projection onto the top PCAs, and finally a
+%%      biplot. The scree plot and projection can help you judge if a few
+%%      principal components can describe your dataset and the biplot can
+%%      show you which descriptors are actually spreading out your sequences.
+%%    }
+%%	 }
+%%}
 
 \author{
 Andrew White
@@ -145,7 +144,7 @@ Andrew White
 
 \seealso{
 \code{\linkS4class{Sequences}}, \code{\link{defaultBaseMatrix}},
-\code{\link{FiveTwoCV}}, \code{\link{wilcox.test}}
+\code{\link{wilcox.test}}
 }
 \examples{
 

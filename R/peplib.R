@@ -88,7 +88,7 @@ sDist <- function(s1, s2, params=default.MetricParams) {
 
 }
 
-sHammingDist <- function(s1, s2) {
+sHammingDist <- function(s1, s2, params) {
   distance <- sapply(1:min(length(s1),length(s2)), FUN=function(x) {as.double(s1[x] == s2[x])})
   distance <- distance - (max(length(s1), length(s2)) - min(length(s1), length(s2)))
 }
@@ -150,9 +150,12 @@ wdist <- function(seqmatrix, sweights=NULL, dist=sDist, params=default.MetricPar
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
                  fill = FALSE, comment.char="", alphabet=aabet) {
   #assumes that the first column is the sequence information
-  data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header)
+  data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)
   data[,1] <- as.character(data[,1])
   seqmatrix <- t(sapply(data[,1], FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}))
+  if(length(alphabet) == 0) {
+    alphabet = unique(c(seqmatrix))
+  }
   seqmatrix <- apply(seqmatrix, MARGIN=2, FUN=function(x) {sapply(x, FUN=function(y) {which(alphabet == as.character(y))})})
 
   rnames <- apply(seqmatrix, MARGIN=1, FUN=function(x) {paste(alphabet[x], collapse="")})
@@ -170,15 +173,17 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   return(seqs)
 }
 
+read.fasta <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
+                 fill = FALSE, alphabet=aabet) {
+  return(read.sequences(file, header, sep, quote, dec, fill, comment.char=">", alphabet))
+}
+
 
 #this will allow the writing of sequences to a file, utilizing R's
 #built in write.table method If you pass a motifModel along with the
 #sequences, then it will align and output the motifs from the
 #sequences.
-write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, quote = FALSE, sep = " ",
-                 eol = "\n", na = "NA", dec = ".", row.names = FALSE,
-                 col.names = FALSE, qmethod = c("escape", "double"),
-                 fileEncoding = "") {
+write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE) {
 
   if(!is.null(motifModel)) {
     
@@ -199,10 +204,7 @@ write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE, 
   
   output <- apply(seqs, MARGIN=1, FUN=function(x) {paste(seqs@alphabet[x], collapse="")})
   
-  write.table(output, file=file, append=append, quote=quote, sep=sep, eol=eol,
-              na=na, dec=dec, row.names=row.names,
-              col.names = col.names, qmethod=qmethod,
-              fileEncoding=fileEncoding)
+  write.table(output, file=file, append=append)
   
 }
 
@@ -236,18 +238,22 @@ write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
 
 }
 
-plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber)) {
-
+plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber), legendText=c()) {
+  
   colors <- rep("black", nrow(seqs))
   shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=75, l=70 )
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
   
-  fit <- cmdscale(distanceMatrix, eig=T, k=2)
-  x <- fit$points[,1]
-  y <- fit$points[,2]
+#  fit <- cmdscale(distanceMatrix, eig=T, k=2)
+  fit <- prcomp(distanceMatrix)
+  x <- fit$x[,1]
+  y <- fit$x[,2]
   plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
+  if(length(legendText) > 0) {
+    legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, length(legendText)), xpd=TRUE)
+  }
 }
 
 setGeneric("plot")
@@ -274,8 +280,8 @@ createSWeights <- function(seqmatrix, params=default.MetricParams) {
   return(sweights)
 }
 
-motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=15)  {
-  
+motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=8, plotMain="")  {
+
   if(is.na(motifNumber)) {
     cat("Guessing cluster number, this could take a while...\n")
     ll <- data.frame(clusterN=1:maxGuess, logLik=rep(0, maxGuess))
@@ -284,14 +290,15 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
       ll$logLik[i] <- logLik(motifModelSet(seqs, i, type, width, verbose, clusterType))
     }
     cat("\n")
-    plot(ll, xlab="Cluster Number", pch=19)
+    plot(ll, xlab="Cluster Number", pch=19, col="black", main=plotMain)
+    lines(ll, col="black", lty=1)
     motifNumber <- ll$clusterN[which.min(ll$logLik)]
   }
   if(motifNumber == 1) {
     return(new("MotifModelSet", motifs=list(motifModel(seqs, type, width))))
   }
-  
 
+    
   clusters <- aclust(dist(seqs), clusterNumber=motifNumber, verbose=verbose, type=clusterType)
   seqList <- vector(mode="list", length=motifNumber)
   
@@ -301,6 +308,7 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
   
   result <- lapply(seqList, FUN=function(x) { motifModel(x, type, width) })
   mset <- new("MotifModelSet", motifs=result)
+  
   return(mset)
 }
 
@@ -323,9 +331,9 @@ motifModel <- function(seqs, type="fixed", width=4) {
   }
 
   convergence <- 10
-  while(convergence > 10**-5) {
+  while(convergence > 10**-3) {
     temp <- EMStep(model,seqs)
-    convergence <- sum((model@mmodel - temp@mmodel)**2)
+    convergence <- sum((model@mmodel - temp@mmodel)**2 / (model@mmodel)**2)
     model <- temp
   }
   
@@ -541,7 +549,7 @@ EMStep.SSOOPS <- function(model, seqs) {
           }
        }
  }
-  }
+   }
   #I don't think this is the correct background model, since each amino acid is represented equally in the peptide library.
 #  for(i in 1:length(model@bmodel)) {
 #    model@bmodel[i] <- bcounts[i] / bsum
@@ -686,6 +694,7 @@ EMStep.ZOOPS <- function(model, seqs) {
 
    model@gamma <- sum(model@qarray) / nrow(seqs)
 
+  
    return(model)
 }
 
@@ -723,8 +732,13 @@ logLik.SSOOPS <- function(model) {
     for(j in 1:ncol(model@seqs)) {
       if(j + model@width - 1 <= ncol(model@seqs)) {
         pj <- 0
-        for(k in 1:model@width) {
-          pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs[i,j + k - 1], k])
+        for(k in 1:ncol(model@seqs)) {
+          if(k >= j && k < j + model@width) {
+            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs[i,k], k -j + 1])
+          }
+          else {
+            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs[i,k]])
+          }
         }
         pseq <- pseq + pj
       }
@@ -732,6 +746,7 @@ logLik.SSOOPS <- function(model) {
     logLik <- logLik + pseq
   }
   names(logLik) <- NULL
+  
   return(logLik)
 }
 
@@ -793,6 +808,7 @@ BIC.MotifModelSet <- function(object) {
 
 logLik.MotifModelSet <- function(object) {
 
+
   mset <- object
   logLik <- 0
   for(i in 1:length(mset@motifs)) {
@@ -832,7 +848,7 @@ factory.SSOOPS <- function(seqs, width=3) {
   alphabet <- seqs@alphabet
 
   model <- new("SSOOPS",
-               zvector=rep(1./width, ncol(seqs) - width + 1),
+               zvector=rep(1./(ncol(seqs) - width + 1.), ncol(seqs) - width + 1),
                mmodel=matrix(rep(1.0/length(alphabet),length(alphabet) * width), ncol=width),
                bmodel=rep(1.0/length(alphabet),length(alphabet)),
                width=as.integer(width),
@@ -899,19 +915,83 @@ print.MotifModel <- function(model) {
   
 }
 
+MotifModel.motifString <- function(model)  {
+
+  #find where the motif begins
+  ncolz <- 0
+  if(class(model) == "SSOOPS") {
+    zsum <- model@zvector
+    ncolz <- length(model@zvector)
+  } else {
+    zsum <- apply(model@zmatrix, MARGIN=2, FUN=sum)
+    ncolz <- ncol(model@zmatrix)
+  }
+  start <- which.max(zsum)
+
+  mnum <- 4
+  cut <- 0.15
+
+  motifMode <- matrix(rep("", model@width * mnum), nrow=mnum)
+  for(i in 1:ncol(model@mmodel)) {
+    csort <- order(model@mmodel[,i], decreasing=T)
+    motifMode[1,i] <- rownames(model@mmodel)[csort[1]]
+    for(j in 2:mnum) {
+      if(model@mmodel[csort[j],i] > cut) {
+        motifMode[j,i] <- rownames(model@mmodel)[csort[j]]
+      }
+    }
+  }
+  motifModeStr <- apply(motifMode, MARGIN=2, FUN=function(x) {paste("[",paste(x,collapse=""),"]", sep="")})
+
+  seqMode <- c(rep("-", start - 1), motifModeStr, rep("-", ncolz - start ))
+  return(paste(seqMode, collapse=""))
+   
+}
+
 setGeneric("print")
 setMethod("print", "MotifModel", function(x,...) print.MotifModel(x))
+
+setGeneric("motifString", def = function(x,...) standardGeneric("motifString"))
+setMethod("motifString", "MotifModel", function(x,...) MotifModel.motifString(x))
 
 
 plot.MotifModelSet <- function(x,...) {
 
-  models <- x
+  model <- x
+  clusterNumber <- length(model@motifs)
+
+  clusters <- vector("list", clusterNumber)
+  legendText <- vector("character", clusterNumber)
   
-  for(i in 1:length(models@motifs)) {
-    print.MotifModel(models@motifs[[i]])
-    plot.MotifModel(models@motifs[[i]])
-    print(i)
+  seqs.data <- matrix(0,nrow=sum(sapply(1:clusterNumber, function(x) nrow(model@motifs[[x]]@seqs))), ncol=ncol(model@motifs[[1]]@seqs))
+
+  counter <- 1
+  for(i in 1:clusterNumber) {
+    clusters[[i]] <- counter:(counter - 1 + nrow(model@motifs[[i]]@seqs))
+    counter <- counter + nrow(model@motifs[[i]]@seqs)
+    seqs.data[clusters[[i]],] <- model@motifs[[i]]@seqs@.Data
+    legendText[i] <- motifString(model@motifs[[i]])
+
+
   }
+
+  seqs <- new("Sequences", seqs.data,alphabet=model@motifs[[1]]@seqs@alphabet)
+
+
+  colors <- rep("black", nrow(seqs))
+  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=75, l=70 )
+  for(i in 1:length(clusters)) {
+    colors[clusters[[i]]] <- shades[i]
+  }
+
+  fit <- prcomp(dist(seqs))
+  x <- fit$x[,1]
+  y <- fit$x[,2]
+  plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
+
+  legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
+
+
   
 }
 
@@ -1149,25 +1229,25 @@ findMinDistElement <- function(sDistMatrix) {
 
 simpleDescriptors <- function(seqs, response=numeric(0), include.statistics=FALSE) {
 
-  desc <- descriptors(seqs, response,
-  base.matrix=defaultBaseMatrix[,c("MW", "ALogP", "TopoPSA", "helix",
-  "nAromBond")], do.var=F, alags=c(), do.counts=F, do.mean=T,
-  do.position=F, include.statistics=include.statistics, accuracy=0.001)
+  desc <- descriptors(seqs, response, base.matrix=defaultBaseMatrix[,c("count.BasicGroups", "count.AcidicGroups", "count.PolarGroups", "count.NonPolarGroups", "count.AromaticGroups", "count.ChargedGroups",  "ALogP")], do.var=F,
+  alags=c(), do.counts=F, do.mean=T, do.position=F,
+  include.statistics=include.statistics, accuracy=0.001)
 
 
   return(desc)
   
 }
 
-descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
+descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=FALSE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
 
+  
   if(include.statistics) {
     if(ncol(seqs) >= 10) {
       cat("Warning: the sequence space is very large for calculating statistics")
     }
   }
 
-  if(is.na(base.matrix)) {
+  if(length(base.matrix) == 1 && is.na(base.matrix)) {
     base.matrix <- defaultBaseMatrix
   }
   
@@ -1216,14 +1296,11 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
   }
 
   if(do.counts) {
-    for(i in 1:(length(alphabet) - 1)) {
+    count.start.index <- index
+    for(i in 1:length(alphabet)) {
       dnames[index] <- paste('NUM', alphabet[i], sep=".")
       index <- index + 1
     }
-
-    dnames[index] <- paste('NUM.GAP')
-    index <- index + 1
-    
   }
   
 
@@ -1235,8 +1312,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
   for(i in 1:nrow(seqs)) {
     index <- 1
     for(j in 1:base.num) {
-      cat(paste("\r", format((base.num * multiplier * (i- 1) + index) * 100 / (base.num * multiplier * nrow(seqs)),width=4, digits=3), "%        "))
-
+      
       cur.desc <- base.matrix[seqs[i,], j]
       cur.mean <- mean(cur.desc)
       cur.var <- var(cur.desc)
@@ -1273,9 +1349,19 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
 
   cat("\n")
 
+
+  #Remove non-varying descriptors
   desc.var <- apply(desc, MARGIN=2, FUN=var)
+
   if(sum(which(desc.var == 0)) > 0) {
-    desc <- desc[-which(desc.var == 0)]
+    if(do.counts) {
+      if(sum(which(desc.var[1:count.start.index] == 0)) > 0) {
+        desc <- desc[-which(desc.var[1:count.start.index] == 0)]
+      }
+    }
+    else {
+      desc <- desc[-which(desc.var == 0)]
+    }
   }
 
   desc <- factory.descriptor(desc)
@@ -1285,18 +1371,19 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
   #now, calculate means for each row
   if(include.statistics) {
 
-    cat("Standard Error and variances are currently unimplemented\nCalculting Means..\n.")
-    dseqs <- decoys(seqs, 10 * nrow(seqs))
-    ddesc <- matrix(0, nrow=10 * nrow(seqs), ncol=ncol(desc))
+    cat("Standard Error and variances are currently unimplemented\nCalculating Means..\n.")
+
+    dseqs <- decoys(seqs, 500)
+    ddesc <- matrix(0, nrow=nrow(dseqs), ncol=ncol(desc))
     for(i in 1:nrow(dseqs)) {
       index <- 1
       for(j in 1:base.num) {
         cat(paste("\r", format((base.num * multiplier * (i- 1) + index) * 100 / (base.num * multiplier * nrow(dseqs)),width=4, digits=3), "%        "))
-        
+
         cur.desc <- base.matrix[dseqs[i,], j]
         cur.mean <- mean(cur.desc)
         cur.var <- var(cur.desc)
-        
+
         if(do.mean) {
           ddesc[i, index] <- cur.mean
           index <- index + 1
@@ -1319,12 +1406,13 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
         }
       }
       if(do.counts) {
-        for(j in 1:length(alphabet)) {
-          ddesc[i, index] <- sum(dseqs[i,] == j)
+        for(k in 1:length(alphabet)) {
+          ddesc[i, index] <- sum(dseqs[i,] == k)
           index <- index + 1
         }
-      }      
+      }
     }
+    cat("\n")
 
     #Calculate estimated p-values, the amount of overlap between the two distributions using Mann-Whitney test
     index <- 1
@@ -1332,8 +1420,6 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
       if(desc.var[i] != 0) {
         x <- ddesc[,i]
         y <- desc[,i]
-        print(x)
-        print(y)
         p.value <- wilcox.test(x,y)$p.value
         desc@pvalues[index] <- p.value
         index <- index + 1
@@ -1417,7 +1503,7 @@ setGeneric("rbind")
 setMethod("rbind", "Sequences", function(...,deparse.level=1) rbind.Sequences(...))
 
 decoys <- function(seqs, n=nrow(seqs)){
-  choices <- unique(seqs)
+  choices <- seqs@alphabet
   decoys <- t(sapply(1:n, FUN=function(x) {sample(x=choices, size=ncol(seqs), replace=T)}))
   decoyNames <- apply(decoys, MARGIN=1, FUN=function(x) {paste(seqs@alphabet[x], collapse="")})
   rownames(decoys) <- decoyNames

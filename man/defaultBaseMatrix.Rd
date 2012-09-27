@@ -52,8 +52,15 @@ for creating the desrciptors of peptide sequences.
     \item{\code{TopoPSA}}{Topological polar surface area based on fragment contributions}
     \item{\code{XLogP}}{An estimate of the \code{logP} partition coefficient}
     \item{\code{fragC}}{a numeric vector}
-    \item{\code{count.AcidicGroups}}{number of acidic groups}
-    \item{\code{count.BasicGroups}}{number of basic groups}
+    \item{\code{count.AcidicGroups}}{number of acidic groups: E, D}
+    \item{\code{count.AromaticGroups}}{number of aromatic groups: Y, W, F}
+    \item{\code{count.BasicGroups}}{number of basic groups: H, K R}
+    \item{\code{count.ChargedGroups}}{number of charged groups: E, D, R,
+    K, H}
+    \item{\code{count.NonPolarGroups}}{number of nonpolar groups: A, V,
+      L, I, M, F, W}
+    \item{\code{count.PolarGroups}}{number of polar groups: G, S, T, C,
+      P, N, Q, Y, K, R, H, E, D}
     \item{\code{ALogP}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
     \item{\code{ALogp2}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
     \item{\code{AMR}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
@@ -70,11 +77,11 @@ for creating the desrciptors of peptide sequences.
   }
 }
 \details{
-See \code{\linkS4class{Descriptors-class}} for details. The descriptors
+See \code{\linkS4class{Descriptors}} for details. The descriptors
 were calculated using CDK.
 }
 \seealso{
-\code{\linkS4class{Descriptors-class}}
+\code{\linkS4class{Descriptors}}
  }
 
 \keyword{datasets}
