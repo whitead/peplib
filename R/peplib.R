@@ -1,5 +1,5 @@
 #SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
-setClass("Sequences", representation(alphabet="character"), contains="matrix")
+setClass("Sequences", representation(alphabet="character", nseqs="numeric"), contains="matrix")
 setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
 setClass("MotifModel", representation(mmodel="matrix", bmodel="numeric", width="integer", seqs="Sequences", np="integer"))
@@ -128,11 +128,11 @@ setGeneric("dist")
 setMethod("dist", "Sequences", function(x, method="euclidian", diag=F, upper=F, p=2) dist.Sequences(x, method))
 setMethod("[", signature=c("Sequences"), definition=function(x, i, j, ..., drop) {
   if(missing(j)) {
-    new("Sequences", x@.Data[i,], alphabet=x@alphabet)
+    new("Sequences", matrix(x@.Data[i,],nrow=length(i)), alphabet=x@alphabet, nseqs=0)
   } else if(missing(i)) {
-    new("Sequences", x@.Data[,j], alphabet=x@alphabet)
+    new("Sequences", x@.Data[,j], alphabet=x@alphabet, nseqs=0)
   } else {
-    x@.Data[i,j]
+    new("Sequences", x@.Data[i,j], alphabet=x@alphabet, nseqs=0)
   }
 } )
 
@@ -150,9 +150,10 @@ wdist <- function(seqmatrix, sweights=NULL, dist=sDist, params=default.MetricPar
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
                  fill = FALSE, comment.char="", alphabet=aabet) {
   #assumes that the first column is the sequence information
-  data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)
+  data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)  
   data[,1] <- as.character(data[,1])
-  seqmatrix <- t(sapply(data[,1], FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}))
+  nseqs <- length(unique(data[,1]))
+  seqmatrix <- matrix(sapply(data[,1], FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}), nrow=nrow(data), byrow=TRUE)
   if(length(alphabet) == 0) {
     alphabet = unique(c(seqmatrix))
   }
@@ -168,7 +169,7 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   rownames(seqmatrix) <- rnames
 
   
-  seqs <- new("Sequences",  seqmatrix, alphabet=alphabet)
+  seqs <- new("Sequences",  seqmatrix, alphabet=alphabet, nseqs=nseqs)
   
   return(seqs)
 }
@@ -282,8 +283,24 @@ createSWeights <- function(seqmatrix, params=default.MetricParams) {
 
 motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T, clusterType="kmeans", maxGuess=8, plotMain="")  {
 
+  #can't have a motif wider than the sequences
+  if(width > ncol(seqs)) {
+    width <- ncol(seqs)
+  }
+
+  #check if the number of sequences is accurate
+  if(seqs@nseqs == 0) {
+    seqs@nseqs <- length(unique(apply(seqs@.Data, MARGIN=1, FUN=function(x) {paste(x,collapse="")})))
+  }
+  
   if(is.na(motifNumber)) {
     cat("Guessing cluster number, this could take a while...\n")
+
+    #can't have more clusters than unique sequences
+    if(maxGuess > seqs@nseqs) {
+      maxGuess <- seqs@nseqs
+    }
+    
     ll <- data.frame(clusterN=1:maxGuess, logLik=rep(0, maxGuess))
     for(i in 1:maxGuess) {
       cat(paste("\r", i, "/", maxGuess))
@@ -293,12 +310,15 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
     plot(ll, xlab="Cluster Number", pch=19, col="black", main=plotMain)
     lines(ll, col="black", lty=1)
     motifNumber <- ll$clusterN[which.min(ll$logLik)]
-  }
-  if(motifNumber == 1) {
+  }else if(motifNumber == 1) {
     return(new("MotifModelSet", motifs=list(motifModel(seqs, type, width))))
   }
 
-    
+  if(motifNumber > seqs@nseqs) {
+    cat(paste("Warning: must have more unique sequences than motifs. Lowering motif number to", seqs@nseqs))
+    motifNumber <- seqs@nseqs
+  }
+
   clusters <- aclust(dist(seqs), clusterNumber=motifNumber, verbose=verbose, type=clusterType)
   seqList <- vector(mode="list", length=motifNumber)
   
@@ -314,9 +334,18 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
 
 motifModel <- function(seqs, type="fixed", width=4) {
 
+  if(width > ncol(seqs)) {
+    width <- ncol(seqs)
+  }
+
+  #check if the number of sequences is accurate
+  if(seqs@nseqs == 0) {
+    seqs@nseqs <- length(unique(apply(seqs@.Data, MARGIN=1, FUN=function(x) {paste(x,collapse="")})))
+  }
+  
   if(class(seqs) == "matrix") {
 
-    seqs <- new("Sequences", seqs, alphabet=aabet)
+    seqs <- new("Sequences", seqs, alphabet=aabet, nseqs=seqs@nseqs)
     
   }
   
@@ -510,14 +539,20 @@ EMStep.SSOOPS <- function(model, seqs) {
   #Can be optimized, do this someday 
   m <- (ncol(seqs) - model@width + 1)
   n <- nrow(seqs)
+  
+  pseudocount <- length(alphabet)
+  if(pseudocount > nrow(seqs)) {
+    pseudocount <- nrow(seqs)
+  }
+  
   ztrial <- rep(1., m)
-  bcounts <- rep(1,length(model@bmodel))
-  mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
+  bcounts <- rep(pseudocount / length(alphabet),length(model@bmodel))
+  mcounts <- matrix(rep(pseudocount / length(alphabet),length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
   rownames(mcounts) <- alphabet
 
-  bsum <- length(model@bmodel)
-  msums <- rep(nrow(model@mmodel), ncol(mcounts))
+  bsum <- pseudocount
+  msums <- rep(pseudocount, ncol(mcounts))
   psum <- 0
 
   for(i in 1:n) {
@@ -574,14 +609,20 @@ EMStep.OOPS <- function(model, seqs) {
   #Can be optimized, do this someday 
   m <- (ncol(seqs) - model@width + 1)
   n <- nrow(seqs)
+
+  pseudocount <- length(alphabet)
+  if(pseudocount > nrow(seqs)) {
+    pseudocount <- nrow(seqs)
+  }
+  
   ztrial <- matrix(rep(1, m * n), nrow=n, ncol=m)
-  bcounts <- rep(1,length(model@bmodel))
-  mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
+  bcounts <- rep(pseudocount / length(alphabet),length(model@bmodel))
+  mcounts <- matrix(rep(pseudocount / length(alphabet), length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
   rownames(mcounts) <- alphabet
 
-  bsum <- length(model@bmodel)
-  msums <- rep(nrow(model@mmodel), ncol(mcounts))
+  bsum <- pseudocount
+  msums <- rep(pseudocount, ncol(mcounts))
 
 
   for(i in 1:n) {
@@ -634,14 +675,20 @@ EMStep.ZOOPS <- function(model, seqs) {
   #Can be optimized, do this someday 
   m <- (ncol(seqs) - model@width + 1)
   n <- nrow(seqs)
+
+  pseudocount <- length(alphabet)
+  if(pseudocount > nrow(seqs)) {
+    pseudocount <- nrow(seqs)
+  }
+  
   ztrial <- matrix(rep(1, m * n), nrow=n, ncol=m)
-  bcounts <- rep(1,length(model@bmodel))
-  mcounts <- matrix(rep(1,length(model@mmodel)), dim(model@mmodel))
+  bcounts <- rep(pseudocount / length(alphabet),length(model@bmodel))
+  mcounts <- matrix(rep(pseudocount / length(alphabet),length(model@mmodel)), dim(model@mmodel))
   names(bcounts) <- alphabet
   rownames(mcounts) <- alphabet
 
-  bsum <- length(model@bmodel)
-  msums <- rep(nrow(model@mmodel), ncol(mcounts))
+  bsum <- pseudocount
+  msums <- rep(pseudocount, ncol(mcounts))
 
 
   for(i in 1:n) {
@@ -716,7 +763,7 @@ logLik.OOPS <- function(model) {
           pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs[i,j + k - 1], k])
         }
         pseq <- pseq + pj
-      }
+      }#PUT BACKGROUND BACK IN
     }
     logLik <- logLik + pseq
   }
@@ -828,7 +875,7 @@ setMethod("BIC", "MotifModelSet", function(object) BIC.MotifModelSet(object))
 setMethod("BIC", "MotifModel", function(object) BIC.MotifModel(object))
 
 
-factory.OOPS <- function(seqs, width=3) {
+factory.OOPS <- function(seqs, width=ncol(seqs)) {
   alphabet <- seqs@alphabet
   
   model <- new("OOPS",
@@ -844,7 +891,7 @@ factory.OOPS <- function(seqs, width=3) {
   return(model)
 }
 
-factory.SSOOPS <- function(seqs, width=3) {
+factory.SSOOPS <- function(seqs, width=ncol(seqs)) {
   alphabet <- seqs@alphabet
 
   model <- new("SSOOPS",
@@ -861,7 +908,7 @@ factory.SSOOPS <- function(seqs, width=3) {
   return(model)
 }
 
-factory.ZOOPS <- function(seqs, width=3) {
+factory.ZOOPS <- function(seqs, width=ncol(seqs)) {
   alphabet <- seqs@alphabet
 
   model <- new("ZOOPS",
@@ -878,6 +925,10 @@ factory.ZOOPS <- function(seqs, width=3) {
   return(model)
 }
 
+
+print.Sequences <- function(seqs) {
+  
+}
 
 print.MotifModel <- function(model) {
 
@@ -987,6 +1038,7 @@ plot.MotifModelSet <- function(x,...) {
   fit <- prcomp(dist(seqs))
   x <- fit$x[,1]
   y <- fit$x[,2]
+  par(mar=c(5,4,2,7))
   plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
 
   legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
@@ -995,7 +1047,7 @@ plot.MotifModelSet <- function(x,...) {
   
 }
 
-plot.MotifModel.motifStartingPosition <- function(motifModel) {
+MotifModel.plotStartingPosition <- function(motifModel) {
 
   par(fg="dark gray")
   if(class(motifModel) == "SSOOPS") {
@@ -1007,7 +1059,7 @@ plot.MotifModel.motifStartingPosition <- function(motifModel) {
 
 }
 
-plot.MotifModel.motifs <- function(motifModel) {
+MotifModel.plotPositions <- function(motifModel) {
 
   par(mfrow=c(ceiling(motifModel@width / 2),2), mar=c(3,3,2,2), cex=0.7)
   for(i in 1:motifModel@width) {
@@ -1016,9 +1068,9 @@ plot.MotifModel.motifs <- function(motifModel) {
   par(mfrow=c(1,1))
 }
 
-plot.MotifModel.fit <- function(motifModel) {
+MotifModel.plotFits <- function(motifModel) {
 
-  par(fg="dark gray")
+  
   predictions <- sort(predict(motifModel), decreasing=T)
   ncol <- 50
   colsGood <- colorRampPalette(c("white", "green", "green"))(50)
@@ -1033,6 +1085,15 @@ plot.MotifModel.fit <- function(motifModel) {
   barplot(predictions, names.arg=NULL, main="", col=cols)
 
 }
+
+setGeneric("plotFits", function(m) standardGeneric("plotFits"))
+setMethod("plotFits", "MotifModel", MotifModel.plotFits)
+
+setGeneric("plotStartingPosition", function(m) standardGeneric("plotStartingPosition"))
+setMethod("plotStartingPosition", "MotifModel", MotifModel.plotStartingPosition)
+
+setGeneric("plotPositions", function(m) standardGeneric("plotPositions"))
+setMethod("plotPositions", "MotifModel", MotifModel.plotPositions)
 
 setMethod("plot", "MotifModelSet", function(x, y, ...) plot.MotifModelSet(x,...))
 
@@ -1071,7 +1132,7 @@ plot.MotifModel <- function(x,...) {
 setMethod("plot", "MotifModel", function(x, y, ...) plot.MotifModel(x,...))
 
 aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=20) {	   
-
+  
   if(class(sDistMatrix) == "Sequences") {
     sDistMatrix <- dist(sDistMatrix)
   }
@@ -1684,7 +1745,6 @@ modelStep <- function(desc, modelFxn, fitness=FiveTwoCV.default, resp=desc@respo
     cols <- c(cols,cols.toadd)
 
     df <- data.frame(resp=resp[-desc.hyperval.index],dsub[,cols])
-    print(df)
 
     colnames(df) <- c("resp", cols)
 

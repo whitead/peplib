@@ -1,8 +1,10 @@
 importFrom("methods", setClass, setGeneric, setMethod, representation, new)
-exportClasses(Sequences, Descriptors, MetricParams, OOPS, SSOOPS, ZOOPS, MotifModelSet)
+exportClasses(Sequences, Descriptors, MetricParams, OOPS, SSOOPS, ZOOPS, MotifModelSet, MotifModel)
 export(default.MetricParams, descriptors, simpleDescriptors, motifModel, aclust, motifModelSet, changeClusterFormat, ROC, read.sequences, write.sequences, write.fasta, read.fasta)
 importFrom("utils", data)
 importFrom("graphics", plot)
 importFrom("stats", dist, kmeans, residuals, logLik, predict)
-exportMethods(dist, plot, predict, logLik, print, residuals, rbind, BIC, classify, motifString)
+exportMethods(dist, plot, predict, logLik, print, residuals, rbind, classify, motifString, plotFits,
+              plotPositions, plotStartingPosition)
 S3method("rbind", Sequences)
+S3method("print", MotifModel)

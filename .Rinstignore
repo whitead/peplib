@@ -1,1 +1,4 @@
 .*~
+man/FiveTwoCV.Rd
+.git/.*
+.*#.*

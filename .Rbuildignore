@@ -1,2 +1,3 @@
 man/FiveTwoCV.Rd
-.git/*
+.git/.*
+man/.#*
