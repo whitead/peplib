@@ -1039,7 +1039,7 @@ plot.MotifModelSet <- function(x,...) {
   x <- fit$x[,1]
   y <- fit$x[,2]
   par(mar=c(5,4,2,7))
-  plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
+  plot(x,y,xlab="Component 1", ylab="Component 2", col=colors)
 
   legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
 
@@ -1063,7 +1063,11 @@ MotifModel.plotPositions <- function(motifModel) {
 
   par(mfrow=c(ceiling(motifModel@width / 2),2), mar=c(3,3,2,2), cex=0.7)
   for(i in 1:motifModel@width) {
-    barplot(motifModel@mmodel[,i], main=paste("Motif Position", i), col=hcl(h=1:ncol(motifModel@seqs) * (360 / ncol(motifModel@seqs))), border="black")
+    barx <- barplot(motifModel@mmodel[,i], main=paste("Motif Position", i), col=hcl(h=1:ncol(motifModel@seqs) * (360 / ncol(motifModel@seqs))), border="black", xaxt="n")
+    #Find the highest three bars and label those
+    morder <- rev(order(motifModel@mmodel[,i]))[1:3]
+    text(barx[morder], motifModel@mmodel[morder,i], rownames(motifModel@mmodel)[morder],
+         pos=3, col="black", cex=1.5)
   }
   par(mfrow=c(1,1))
 }
