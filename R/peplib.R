@@ -1063,7 +1063,7 @@ MotifModel.plotPositions <- function(motifModel) {
 
   par(mfrow=c(ceiling(motifModel@width / 2),2), mar=c(3,3,2,2), cex=0.7)
   for(i in 1:motifModel@width) {
-    barx <- barplot(motifModel@mmodel[,i], main=paste("Motif Position", i), col=hcl(h=1:ncol(motifModel@seqs) * (360 / ncol(motifModel@seqs))), border=NA, xaxt="n", ylim=c(0,max(motifModel@mmodel[,i]) * 1.3))
+    barx <- barplot(motifModel@mmodel[,i], main=paste("Position", i), col=hcl(h=1:ncol(motifModel@seqs) * (360 / ncol(motifModel@seqs))), border=NA, xaxt="n", ylim=c(0,max(motifModel@mmodel[,i]) * 1.3))
     #Find the highest three bars and label those
     morder <- rev(order(motifModel@mmodel[,i]))[1:3]
     text(barx[morder], motifModel@mmodel[morder,i], rownames(motifModel@mmodel)[morder],
