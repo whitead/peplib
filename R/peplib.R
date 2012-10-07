@@ -242,7 +242,7 @@ write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
 plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber), legendText=c()) {
   
   colors <- rep("black", nrow(seqs))
-  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=75, l=70 )
+  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=90, l=70 )
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
@@ -1030,7 +1030,7 @@ plot.MotifModelSet <- function(x,...) {
 
 
   colors <- rep("black", nrow(seqs))
-  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=75, l=70 )
+  shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=90, l=70 )
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
@@ -1038,10 +1038,10 @@ plot.MotifModelSet <- function(x,...) {
   fit <- prcomp(dist(seqs))
   x <- fit$x[,1]
   y <- fit$x[,2]
-  par(mar=c(5,4,2,7))
+  par(mar=c(5,4,2,5))
   plot(x,y,xlab="Component 1", ylab="Component 2", col=colors)
 
-  legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
+  legend(max(x) / 2, max(y) * 1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
 
 
   
