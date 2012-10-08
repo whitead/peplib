@@ -871,7 +871,7 @@ setMethod("logLik", "OOPS", function(object, ...) logLik.OOPS(object,...))
 setMethod("logLik", "ZOOPS", function(object, ...) logLik.ZOOPS(object, ...))
 setMethod("logLik", "SSOOPS", function(object, ...) logLik.SSOOPS(object, ...))
 setMethod("logLik", "MotifModelSet", function(object, ...) logLik.MotifModelSet(object, ...))
-setGeneric("BIC", def=function(object) {standardGeneric("BIC")})
+setGeneric("BIC")
 setMethod("BIC", "MotifModelSet", function(object) BIC.MotifModelSet(object))
 setMethod("BIC", "MotifModel", function(object) BIC.MotifModel(object))
 
@@ -1138,7 +1138,7 @@ plot.MotifModel <- function(x,...) {
 
 setMethod("plot", "MotifModel", function(x, y, ...) plot.MotifModel(x,...))
 
-aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=20) {	   
+aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=3) {	   
   
   if(class(sDistMatrix) == "Sequences") {
     sDistMatrix <- dist(sDistMatrix)

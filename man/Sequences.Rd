@@ -29,6 +29,7 @@ Objects can be created by calls of the form \code{new("Sequences", data,
     \item{\code{alphabet}:}{Object of class \code{"character"} The
       character representation of each integer }
     \item{\code{nseqs}:}{The number of unique sequences in the class.}
+    }
 }
 
 \section{Extends}{
