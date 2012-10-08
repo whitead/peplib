@@ -5,7 +5,7 @@
 aclust
 }
 \description{
-Clusters a matrix of peptide sequences using agglomerative clustering
+Clusters a matrix of peptide sequences using kmeans or agglomerative clustering
 }
 \usage{
 aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans", knstart

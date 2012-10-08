@@ -8,7 +8,8 @@ Read in sequences in FASTA format
 Read in sequences in FASTA format
 }
 \usage{
-read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill = FALSE, alphabet = aabet)
+read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill
+= FALSE, alphabet = aabet)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -59,12 +60,6 @@ read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill = FALSE
 	  logical. If \code{TRUE} then in case the rows have unequal length,
 	  blank fields are implicitly added.  
 	}
-	\item{comment.char}{
-	  character: a character vector of length one containing a
-          single character or an empty string.  Use \code{""} to turn off
-          the interpretation of comments altogether.
-	  
-	}
 	\item{alphabet}{
 	  The alphabet to use for the sequences. The default alphabet contains
 	  the cannonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
@@ -91,7 +86,6 @@ read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill = FALSE
   \code{-} should be use to pad the sequences, as seen in the example. Use an alignment
   alogirthm, such as Clustal, to align your sequences before reading.
 }
-\v
 
 \value{
 An object of class \code{\linkS4class{Sequences}}. This is a small

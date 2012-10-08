@@ -151,13 +151,13 @@ print(SHP2MList@motifs[[1]])
 
 small.mlist <- motifModelSet(SHP2Sequences, motifNumber=2,
 type="fixed")
-bic <- BIC(small.mlist)
-print(bic)
+ll <- logLik(small.mlist)
+print(ll)
 
 large.mlist <- motifModelSet(SHP2Sequences, motifNumber=5,
 type="optional")
-bic <- BIC(large.mlist)
-print(bic)
+ll <- logLik(large.mlist)
+print(ll)
 
 
 #split the dataset

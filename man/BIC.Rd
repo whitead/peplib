@@ -10,10 +10,11 @@ Calcualtes the Bayesian Information Content
 \usage{
 BIC(object)
 }
+
 \arguments{
-  \item{obejct}{
+  \item{object}{
     A statistical model, including its data 
-}
+  }
 }
 \details{
   The BIC is calculated as \code{-2 * logLik + k * log(n)}, where \code{k} is the number of

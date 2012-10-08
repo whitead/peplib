@@ -150,10 +150,11 @@ wdist <- function(seqmatrix, sweights=NULL, dist=sDist, params=default.MetricPar
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
                  fill = FALSE, comment.char="", alphabet=aabet) {
   #assumes that the first column is the sequence information
+  
   data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)  
-  data[,1] <- as.character(data[,1])
-  nseqs <- length(unique(data[,1]))
-  seqmatrix <- matrix(sapply(data[,1], FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}), nrow=nrow(data), byrow=TRUE)
+  data <- as.character(data[,1])
+  nseqs <- length(unique(data))
+  seqmatrix <- matrix(sapply(data, FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}), nrow=length(data), byrow=TRUE)
   if(length(alphabet) == 0) {
     alphabet = unique(c(seqmatrix))
   }
@@ -930,8 +931,10 @@ print.Sequences <- function(seqs) {
   
 }
 
-print.MotifModel <- function(model) {
+print.MotifModel <- function(x,...) {
 
+  model <- x
+  
   #find where the motif begins
   ncolz <- 0
   if(class(model) == "SSOOPS") {
@@ -1055,7 +1058,7 @@ MotifModel.plotStartingPosition <- function(motifModel) {
   } else {
     zsum <- apply(motifModel@zmatrix, MARGIN=2, FUN=sum)
   }
-  barplot(zsum, names.arg=as.character(1:length(zsum)), main="", col=hcl(h=1:length(zsum) * (360 / length(zsum))), border="black")
+  barplot(zsum / sum(zsum), names.arg=as.character(1:length(zsum)), main="", col=hcl(h=1:length(zsum) * (360 / length(zsum))), border="black")
 
 }
 
@@ -1090,13 +1093,13 @@ MotifModel.plotFits <- function(motifModel) {
 
 }
 
-setGeneric("plotFits", function(m) standardGeneric("plotFits"))
+setGeneric("plotFits", function(motifModel) standardGeneric("plotFits"))
 setMethod("plotFits", "MotifModel", MotifModel.plotFits)
 
-setGeneric("plotStartingPosition", function(m) standardGeneric("plotStartingPosition"))
+setGeneric("plotStartingPosition", function(motifModel) standardGeneric("plotStartingPosition"))
 setMethod("plotStartingPosition", "MotifModel", MotifModel.plotStartingPosition)
 
-setGeneric("plotPositions", function(m) standardGeneric("plotPositions"))
+setGeneric("plotPositions", function(motifModel) standardGeneric("plotPositions"))
 setMethod("plotPositions", "MotifModel", MotifModel.plotPositions)
 
 setMethod("plot", "MotifModelSet", function(x, y, ...) plot.MotifModelSet(x,...))

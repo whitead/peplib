@@ -28,14 +28,14 @@ Objects can be created by calls of the form \code{new("Sequences", data,
       where each row is a sequence and the sequence is a series of integers}
     \item{\code{alphabet}:}{Object of class \code{"character"} The
       character representation of each integer }
-  }
+    \item{\code{nseqs}:}{The number of unique sequences in the class.}
 }
 
 \section{Extends}{
-Class \code{"\linkS4class{matrix}"}, from data part.
-Class \code{"\linkS4class{array}"}, by class "matrix", distance 2.
-Class \code{"\linkS4class{structure}"}, by class "matrix", distance 3.
-Class \code{"\linkS4class{vector}"}, by class "matrix", distance 4, with explicit coerce.
+  Class \code{"\linkS4class{matrix}"}, from data part.
+  Class \code{"\linkS4class{array}"}, by class "matrix", distance 2.
+  Class \code{"\linkS4class{structure}"}, by class "matrix", distance 3.
+  Class \code{"\linkS4class{vector}"}, by class "matrix", distance 4, with explicit coerce.
 }
 \section{Methods}{
   \describe{
@@ -60,7 +60,9 @@ Class \code{"\linkS4class{vector}"}, by class "matrix", distance 4, with explici
     returns a list of metrics for how well the motifs fit. This method
     can be used, for example, in determining the number of motifs.}
     \item{plot}{\code{plot(seqs, clusterNumber=4,
-	params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(dmat, clusterNumber))}: 
+	params=default.MetricParams, distanceMatrix=dist.Sequences(seqs,
+	params=params), 
+	clusters=aclust(dmat, clusterNumber))}: 
         This method plots a summary plot of the sequences. They are
         plotted on a projection onto their two principal components as found
         from the distance matrix. Additionally, they are colored and

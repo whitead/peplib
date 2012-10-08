@@ -1,3 +1,5 @@
-man/FiveTwoCV.Rd
+man/FiveTwoCV\.Rd
 .git/.*
-man/.#*
+main/classify\.Rd
+man/ROC\.Rd
+

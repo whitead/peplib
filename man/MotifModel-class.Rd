@@ -9,6 +9,14 @@
 \alias{predict,MotifModel-method}
 \alias{print,MotifModel-method}
 \alias{residuals,MotifModel-method}
+\alias{motifString,MotifModel-method}
+\alias{plotFits,MotifModel-method}
+\alias{plotPosition,MotifModel-method}
+\alias{plotStartingPosition,MotifModel-method}
+\alias{plotStartingPosition}
+\alias{plotFits}
+\alias{plotPosition}
+\alias{motifString}
 
 \title{Class "MotifModel"}
 \description{
@@ -100,10 +108,24 @@ Objects can be created by calls of the form \code{motifModel(seqs,
     \item{BIC}{\code{BIC(object)}: Calculates the Bayesian Information Content of the motif
       model. See \code{\link{BIC}} for more information.}
     \item{motifString}{\code{motifString(model)}: Displays the most
-	likely motif from the motif model.}
+      likely motif from the motif model.}
+    \item{plotFits}{\code{plotFits(model)}: A barplot of the
+	log of the ratio of the likelihood of each sequence in the model
+	relative to the background distribution. A positive value
+	indicates a good fit to the motif and a negative value means
+	the sequence fits the background (randomly occurring sequence)
+	better.}
+   \item{plotPosition}{\code{plotPosition(model)}: A grid of plots
+     showing the motif probability distribution at each motif position.
+     The three most likely amino acids/residues at each position are
+     annotated on the plots.}
+   \item{plotStartingPosition}{\code{plotStartingPosition(model)}:  A
+     barplot showing the likelihood of the motif starting at each
+     position. So that 0.3 in the first position means there is a 30\% likelihood
+     of the motif starting in the first position}
+ }
+}
 
-}
-}
 \references{
 %%  ~~put references to the literature/web site here~~
 }

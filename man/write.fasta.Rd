@@ -10,22 +10,23 @@ Write out the given sequences as a FASTA file
 \usage{
 write.fasta(seqs, motifModel = NULL, file = "", eol = "\n")
 }
+
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{seqs}{
-    \code{\linkS4class{Sequences} object containing sequences to be written
-}
+    \code{\linkS4class{Sequences}} object containing sequences to be written
+    }
   \item{motifModel}{
     An optional \code{\linkS4class{MotifModel}} fit to the
     \code{\linkS4class{Sequences}}. This make it so that only the motifs
     are output!
-}
+  }
   \item{file}{
     Path to file where sequences will be written
-}
+  }
   \item{eol}{
     End of line character
-}
+  }
 }
 \details{
   If a \code{\linkS4class{MotifModel}} is passed, then the motifs are

@@ -15,6 +15,9 @@ classify(model, ...)
   \item{model}{
     The model to use for classification.
   }
+  \item{...}{
+    Additional parameters specific to each class.
+    }
 
 }
 \details{
