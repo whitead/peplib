@@ -8,12 +8,15 @@ BIC
 Calcualtes the Bayesian Information Content
 }
 \usage{
-BIC(object)
+BIC(object,...)
 }
 
 \arguments{
   \item{object}{
     A statistical model, including its data 
+  }
+  \item{...} {
+    Additional arguments
   }
 }
 \details{
