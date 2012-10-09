@@ -48,7 +48,7 @@ read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill
 	}
 	\item{quote}{
 	  the set of quoting characters. To disable quoting altogether,
-          use \code{quote = ""}.  See \code{\link{scan}} for the behaviour on quotes
+          use \code{quote = ""}.  See \code{\link{scan}} for the behavior on quotes
           embedded in quotes.  Quoting is only considered for columns
           read as character, which is all of them unless \code{colClasses}
           is specified.
@@ -62,8 +62,8 @@ read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill
 	}
 	\item{alphabet}{
 	  The alphabet to use for the sequences. The default alphabet contains
-	  the cannonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
-	  an unspecificied residue and \code{-} is a gap. 
+	  the canonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
+	  an unspecified residue and \code{-} is a gap. 
 	}
       }
     
@@ -72,19 +72,20 @@ read.fasta(file, header = FALSE, sep = "", quote = "\"", dec = ".", fill
   reading the file itself. Information about the FASTA form may be found
   elsewhere, but basically each sequence starts with a definition/name
   deliminated by a '<' character. For example:
-
-  ----------------------
-  >Sequence 1, from mouse
-  FTRP
-  >Sequence 2b, from humans
-  FPYT
-  >Unkown origin
-  FPRW
-  -----------------------
-
+  \cr
+  ----------------------\cr
+  >Sequence 1, from mouse\cr
+  FTRP\cr
+  >Sequence 2b, from humans\cr
+  FPYT\cr
+  >Unkown origin\cr
+  FPRW\cr
+  -----------------------\cr
   Each sequence should be the same length, thus
   \code{-} should be use to pad the sequences, as seen in the example. Use an alignment
-  alogirthm, such as Clustal, to align your sequences before reading.
+  algorithm, such as Clustal, to align your sequences before reading. The
+  ClustalW2 algorithm is available from the European Bioinformatics
+  Institutes's website. 
 }
 
 \value{

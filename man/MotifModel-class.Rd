@@ -11,17 +11,21 @@
 \alias{residuals,MotifModel-method}
 \alias{motifString,MotifModel-method}
 \alias{plotFits,MotifModel-method}
-\alias{plotPosition,MotifModel-method}
+\alias{plotPositions,MotifModel-method}
+\alias{logLik,MotifModel-method}
+\alias{logLik,OOPS-method}
+\alias{logLik,ZOOPS-method}
+\alias{logLik,SSOOPS-method}
 \alias{plotStartingPosition,MotifModel-method}
 \alias{plotStartingPosition}
 \alias{plotFits}
-\alias{plotPosition}
+\alias{plotPositions}
 \alias{motifString}
 
 \title{Class "MotifModel"}
 \description{
 This is a simple implementation of the MEME motif finding algorithm. The
-MEME algorihtm uses an Expetation-Maximimization search for motifs on
+MEME algorithm uses an Expectation-Maximization search for motifs on
 sequences (\code{\linkS4class{Sequences}}). It requires a choice of the
 motif length. For multiple motifs see \code{\link{MotifModelSet}}
 }
@@ -80,19 +84,19 @@ Objects can be created by calls of the form \code{motifModel(seqs,
       motif model fits the data. Passing new sequences in allows
       classification of new sequences. }
     
-    \item{print}{\code{print(object)}: Prints information
-      about the motif model. The motif "mode" is simply all residues
-      with greater than 15\% probability in decreasing order with a max of
-      4 (since \code{15*5 > 100}). So, [R][GF][GFRD] indicates that only
-      R has a greater than 15\% probability in position 1. In position
-      2, only G and F do, with G having a higher probability than F.
-      In position 3, G, F, R and D all have over 15\% probability of
-      occuring. }
+    \item{print}{\code{print(object)}: Prints information about the
+      motif model, including the motif string. The motif string is
+      simply all residues with greater than 15\% probability in
+      decreasing order with a max of 4 (since \code{15*5 > 100}). So,
+      [R][GF][GFRD] indicates that only R has a greater than 15\%
+      probability in position 1. In position 2, only G and F do, with G
+      having a higher probability than F.  In position 3, G, F, R and D
+      all have over 15\% probability of occuring. }
     
     \item{residuals}{\code{residuals(model, seqs=model@seqs,
 	classes=rep(0,nrow(seqs)), threshold = 0)}: This method classifies
       \code{seqs} and calculates the number of false positives, false
-      negatives, and a measure of accuracy (see refernces) between 0 and
+      negatives, and a measure of accuracy between 0 and
       1. \code{classes} should be the true classes for each sequence, where
       a negative number means it is not in the model and a positive number
       or 0 means it is in the model. The default is all in the model. The
@@ -107,15 +111,22 @@ Objects can be created by calls of the form \code{motifModel(seqs,
       \code{classes} passed to the method.}
     \item{BIC}{\code{BIC(object)}: Calculates the Bayesian Information Content of the motif
       model. See \code{\link{BIC}} for more information.}
-    \item{motifString}{\code{motifString(model)}: Displays the most
-      likely motif from the motif model.}
+    \item{logLik}{\code{logLik(model)}: This method calculates the
+      (expected) log-likelihood of the motif model.}
+    \item{motifString}{\code{motifString(model)}: The motif string is
+      simply all residues with greater than 15\% probability in
+      decreasing order with a max of 4 (since \code{15*5 > 100}). So,
+      [R][GF][GFRD] indicates that only R has a greater than 15\%
+      probability in position 1. In position 2, only G and F do, with G
+      having a higher probability than F.  In position 3, G, F, R and D
+      all have over 15\% probability of occuring.}
     \item{plotFits}{\code{plotFits(model)}: A barplot of the
 	log of the ratio of the likelihood of each sequence in the model
 	relative to the background distribution. A positive value
 	indicates a good fit to the motif and a negative value means
 	the sequence fits the background (randomly occurring sequence)
 	better.}
-   \item{plotPosition}{\code{plotPosition(model)}: A grid of plots
+   \item{plotPositions}{\code{plotPositions(model)}: A grid of plots
      showing the motif probability distribution at each motif position.
      The three most likely amino acids/residues at each position are
      annotated on the plots.}
@@ -127,7 +138,7 @@ Objects can be created by calls of the form \code{motifModel(seqs,
 }
 
 \references{
-%%  ~~put references to the literature/web site here~~
+Bailey, T. L. Ph.D. thesis, University of California at San Diego, 1995.
 }
 \author{
 Andrew White
@@ -137,39 +148,40 @@ Andrew White
   \code{\linkS4class{Sequences}}
 }
 \examples{
-
+\dontrun{
 #get sequence data
-data(SHP2Sequences)
+data(TULASequences)
 
 
 #Create a fixed and optional type model
-SHP2Fixed <- motifModel(SHP2Sequences)
-print(SHP2Fixed)
-plot(SHP2Fixed)
+TULAFixed <- motifModel(TULASequences)
+print(TULAFixed)
+plotPositions(TULAFixed)
 
-SHP2Opt <- motifModel(SHP2Sequences, type="optional")
-print(SHP2Opt)
-plot(SHP2Opt)
+TULAOpt <- motifModel(TULASequences, type="optional")
+print(TULAOpt)
+plotPositions(TULAOpt)
+
 
 #Something more interesting, cluster the data, fit two motif models, and
 # then calculate the residuals
 
-clusters <- aclust(dist(SHP2Sequences), 2)
+clusters <- aclust(dist(TULASequences), 2)
 
-SHP2.M1 <- motifModel(SHP2Sequences[clusters[[1]],], type="fixed")
-SHP2.M2 <- motifModel(SHP2Sequences[clusters[[2]],], type="fixed")
+TULA.M1 <- motifModel(TULASequences[clusters[[1]],], type="fixed")
+TULA.M2 <- motifModel(TULASequences[clusters[[2]],], type="fixed")
 
 #Goodness of fit for model 1 and then using model 1 on the sequences in
 # model 2, which is obviously a bad fit
 
 #get threshold by including all sequences, no matter how bad the fit is.
 
-threshold <- min(predict(SHP2.M1))
+threshold <- min(predict(TULA.M1))
 print(threshold)
 
-print(residuals(SHP2.M1), threshold=threshold)
-print(residuals(SHP2.M1, seqs=SHP2.M2@seqs, threshold=threshold))
-
+print(residuals(TULA.M1), threshold=threshold)
+print(residuals(TULA.M1, seqs=TULA.M2@seqs, threshold=threshold))
+}
 }
 
 \keyword{classes}

@@ -8,9 +8,9 @@
 \description{
 This class stores the parameters used for calcaulting sequence-sequence
 distances. The parameters are all based on the use of substitution
-matrices and scores, for example the blosum Matrix. Many possible matrices can be
+matrices and scores. For example, the BLOSUM matrices may be used. Three possible matrices can be
 accessed using a call to \code{data(blosumXX)} command to create new
-parameter sets. These metric parameter are passed into a few other methods, see
+parameter sets, where \code{XX} is 50, 62, or 90. These metric parameter are passed into a few other methods, see
 the examples below.
 }
 
@@ -37,9 +37,7 @@ Objects can be created by calls of the form \code{new("MetricParams",
 \section{Methods}{
 No methods defined with class "MetricParams" in the signature.
 }
-\references{
-%%  ~~put references to the literature/web site here~~
-}
+
 \author{
 Andrew White
 }
@@ -54,14 +52,14 @@ data(blosum62)
 #Set slightly different gap open, and gap extend parameters
 b62params <- new("MetricParams", smatrix=blosum62, gapOpen=-8,
 gapExtension=-5)
-data(SHP2Sequences)
-plot(SHP2Sequences, params=b62params)
+data(TULASequences)
+plot(TULASequences, params=b62params)
 
 #Change the metric parameters to a more stringent substitution matrix
 data(blosum90)
 b90 <- new("MetricParams", smatrix=blosum90, gapOpen=-8,
 gapExtension=-5)
-plot(SHP2Sequences, params=b90)
+plot(TULASequences, params=b90)
 
 }
 \keyword{classes}

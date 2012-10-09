@@ -128,7 +128,7 @@ setGeneric("dist")
 setMethod("dist", "Sequences", function(x, method="euclidian", diag=F, upper=F, p=2) dist.Sequences(x, method))
 setMethod("[", signature=c("Sequences"), definition=function(x, i, j, ..., drop) {
   if(missing(j)) {
-    new("Sequences", matrix(x@.Data[i,],nrow=length(i)), alphabet=x@alphabet, nseqs=0)
+    new("Sequences", x@.Data[i,], alphabet=x@alphabet, nseqs=length(i))
   } else if(missing(i)) {
     new("Sequences", x@.Data[,j], alphabet=x@alphabet, nseqs=0)
   } else {

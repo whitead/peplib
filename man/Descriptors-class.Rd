@@ -12,8 +12,8 @@
 The descriptors class is an extension to the \code{data.frame} class and
 contains, in addition to the descriptors, information about any response
 data and p-values which describe the difference between the sequences
-vs. the space of possible sequence . The class should be created by a call to \code{descriptors} (see
-arguments and details below).
+vs. the space of possible sequences. The class should be created by a call to \code{descriptors} (see
+arguments and details below) or \code{\link{simpleDescriptors}}.
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{descriptors(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01)}
@@ -22,7 +22,7 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
 \describe{
   \item{seqs}{A \code{\linkS4class{Sequences} object}}
   \item{response}{An optional array containing responses for each
-    sequence. \code{nrow(seqs)} should equal to \code{length(response)}.}
+    sequence. \code{nrow(seqs)} should be equal to \code{length(response)}.}
   \item{base.matrix}{A \code{data.frame} containing descriptors
     calculated on each amino acid. See details.}
   \item{do.var}{Calculate the additional descriptors which are the
@@ -35,7 +35,7 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   \item{alphabet}{The alphabet to use for calculating counts.}
   \item{include.statistics}{If \code{TRUE}, the function will calculate
     the p-values of the descriptors. See details.}
-  \item{accuracy}{The accuracty of the computed statistics on the
+  \item{accuracy}{The accuracy of the computed statistics on the
     descriptors}
   }
 }
@@ -47,12 +47,15 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   single amino acids. There are two reasons for this. First, it is easy
   to calculate descriptors quickly, without relying on another
   program. Second, it is easier to treat calculating the distribution of
-  the descripotrs the sequence space. This obviously depends on the
-  number of descriptors and the chain length of the sequence. For
+  the descriptors of the sequence space. The ability to calculate the
+  descriptors across the sequence space also depends on the number of
+  descriptors and the chain length of the sequence. The advantage of
+  knowing descriptors on the whole sequence space is that it is easy to
+  determine if a descriptor on the sequences is significant. For
   example, if the number of hydrogen bond donors is three standard
   deviations above the mean number of hydrogen bond donors over all
   sequence space, then that is a significant descriptor. This is
-  expressed as a p-value, which is coming from a
+  expressed as a p-value, which is calculated from a
   \code{\link{wilcox.test}}. That is a non-parametric version of the
   Student's t-test.
 
@@ -70,23 +73,23 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   descriptors at a certain position. For example, number of hydrogen
   bond donors at position 2.
 
-  One often is more interested in understanding which what is common
-amongst the active sequences. This may be done by comparing a descriptor
-on the active sequences to the inactive sequences. Since inactive
-sequences are rarely collected in peptide libraries, we may approximate
-the inactive sequences as all sequences. \bold{ This assumption only
-holds if there is a low number of active sequences relative to the size
-of the sequence diversity}. This is often the case but must be observed
-during the experiment. With this assumption, p-values may be calculated
-for each descriptor. These p-values do not assume normality and are a
-measure of the overlap between the active sequences and inactive
-sequences. They are calculated using a Wilcox t-test. A low p-value is
-considered significant and such a desciptor may be considerd to be
-related to activity. \bold{ Remember that a descriptor may be important
-in connection to a motif}. Thus it is important to do both descriptors
-and motif discovery.  \code{include.staistics} will calculate the
-p-values for each of the descriptors. This is only practical for smaller
-lengths, less than 10.
+  One often is more interested in understanding what is common amongst
+the active sequences. This may be done by comparing a descriptor on the
+active sequences to the inactive sequences. Since inactive sequences are
+rarely collected in peptide libraries, we may approximate the inactive
+sequences as all sequences. \bold{ This assumption only holds if there
+is a low number of active sequences relative to the size of the sequence
+diversity}. This is often the case but must be observed during the
+experiment. With this assumption, p-values may be calculated for each
+descriptor. These p-values do not assume normality and are a measure of
+the overlap between the active sequences and inactive sequences. They
+are calculated using a Wilcox t-test. A low p-value is considered
+significant and such a desciptor may be considerd to be related to
+activity. \bold{ Remember that a descriptor may be important in
+connection to a motif}. Thus it is important to do both descriptors and
+motif discovery.  \code{include.staistics} will calculate the p-values
+for each of the descriptors. This is only practical for smaller lengths;
+less than 10.
 
   If \code{base.matrix} is \code{NA}, then the default will be used,
   \code{\link{defaultBaseMatrix}}. See the documentation on that dataset
@@ -146,7 +149,7 @@ Andrew White
 \code{\linkS4class{Sequences}}, \code{\link{defaultBaseMatrix}},
 \code{\link{wilcox.test}}
 }
-\examples{
+\examples{\dontrun{
 
 #calculate some descriptors
 data(SHP2Sequences)
@@ -172,10 +175,7 @@ do.position=FALSE, include.statistics=FALSE)
 #plot with descriptors
 plot(AMPdesc)
 
-#Create a linear model after a PCA
 
-
-
-}
+}}
 \keyword{classes}
 \keyword{datagen}

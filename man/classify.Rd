@@ -27,9 +27,7 @@ classify(model, ...)
 An array with integers representing the classes. A positive number
   indicates a class. A negative number indicates no class.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Andrew White
 }

@@ -1,5 +1,6 @@
 man/FiveTwoCV\.Rd
 .git/.*
+.gitignore
 main/classify\.Rd
 man/ROC\.Rd
 

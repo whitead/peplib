@@ -48,7 +48,7 @@ the field separator character.  Values on each line of the
 }
   \item{quote}{
 the set of quoting characters. To disable quoting altogether,
-          use \code{quote = ""}.  See \code{\link{scan}} for the behaviour on quotes
+          use \code{quote = ""}.  See \code{\link{scan}} for the behavior on quotes
           embedded in quotes.  Quoting is only considered for columns
           read as character, which is all of them unless \code{colClasses}
           is specified.
@@ -68,8 +68,8 @@ the character used in the file for decimal points.
 }
   \item{alphabet}{
     The alphabet to use for the sequences. The default alphabet contains
-  the cannonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
-  an unspecificied residue and \code{-} is a gap. 
+  the canonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
+  an unspecified residue and \code{-} is a gap. 
 }
 }
 \details{
@@ -91,7 +91,7 @@ the character used in the file for decimal points.
   
   Each sequence should be the same length, thus
   \code{-} should be use to pad the sequences, as seen in the example. Use an alignment
-  alogirthm, such as Clustal, to align your sequences before reading.
+  algorithm, such as Clustal, to align your sequences before reading.
 }
 \value{
 An object of class \code{\linkS4class{Sequences}}. This is a small
@@ -110,7 +110,7 @@ Andrew White
   As mentioned above, it is important to align your sequences before
   reading if they are of differing lengths. For example, use the online
   ClustalW2 algorithm available from the European Bioinformatics
-  Institute's website. 
+  Institutes's website. 
   }
 
 \seealso{

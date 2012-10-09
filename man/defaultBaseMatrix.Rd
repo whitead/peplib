@@ -8,7 +8,7 @@ defaultBaseMatrix
 This dataset is a matrix of decsriptors for each amino acid. It is used
 for creating the desrciptors of peptide sequences.
 }
-\usage{data(defaultBaseMatrix)}
+
 \format{
   A data frame with 24 observations on the following 53 variables.
   \describe{
@@ -57,10 +57,10 @@ for creating the desrciptors of peptide sequences.
     \item{\code{count.BasicGroups}}{number of basic groups: H, K R}
     \item{\code{count.ChargedGroups}}{number of charged groups: E, D, R,
     K, H}
-    \item{\code{count.NonPolarGroups}}{number of nonpolar groups: A, V,
-      L, I, M, F, W}
-    \item{\code{count.PolarGroups}}{number of polar groups: G, S, T, C,
-      P, N, Q, Y, K, R, H, E, D}
+    \item{\code{count.NonPolarGroups}}{number of nonpolar groups: A, G,
+      I, L, M, F, W, Y, V}
+    \item{\code{count.PolarGroups}}{number of polar groups: S, T, C,
+      P, N, Q, K, R, H, E, D}
     \item{\code{ALogP}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
     \item{\code{ALogp2}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
     \item{\code{AMR}}{atom additive logP and molar refractivity values as described by Ghose and Crippen}
@@ -72,10 +72,12 @@ for creating the desrciptors of peptide sequences.
       from the protein databank}
     \item{\code{CaSD}}{The solvation density near the C-alpha carbon on
       the amino acid}
-    \item{\code{nHBDon.1}}{}
-    \item{\code{nHBAcc.1}}{}
   }
 }
+\source{
+  Most of these were descriptors were caclulated using the Chemistry
+  Development Kit (CDK). http://sourceforge.net/projects/cdk/
+  }
 \details{
 See \code{\linkS4class{Descriptors}} for details. The descriptors
 were calculated using CDK.

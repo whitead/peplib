@@ -5,8 +5,8 @@
 Function "simpleDescriptors"
 }
 \description{
-This produces a \code{\linkS4class{Descriptors}} which is smaller and
-more simple than those produced by a call to the normal method for
+This produces a \code{\linkS4class{Descriptors}} object which is smaller and
+more simple than those produced by a default call to the normal method for
 producing descriptors, \code{\link{Descriptors}}.
 }
 \usage{
@@ -43,20 +43,21 @@ simpleDescriptors(seqs, response = numeric(0), include.statistics = FALSE)
 \examples{
 
 ##Finding correlation with a response
+\dontrun{
 data(AMPSequences)
 data(AMPSequences.response)
 
 AMP.desc <- simpleDescriptors(AMPSequences, response=AMPSequences.response[,1])
 
 print(cor(AMP.desc))
-
+}
 
 ##Discovering which descriptors are important
 
-data(SHP2Sequences)
+data(TULASequences)
 
-SHP2.desc <- simpleDescriptors(SHP2Sequences, include.statistics=TRUE)
-print(SHP2.desc@pvalues)
+TULA.desc <- simpleDescriptors(TULASequences, include.statistics=TRUE)
+print(TULA.desc@pvalues)
 
 
 }

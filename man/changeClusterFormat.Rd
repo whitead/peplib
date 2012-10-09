@@ -2,7 +2,7 @@
 \alias{changeClusterFormat}
 
 \title{
-Change cluter format
+Change cluster format
 }
 \description{
 Takes in a \code{list} of clusters and outputs a single vector with the

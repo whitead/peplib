@@ -2,10 +2,10 @@
 \alias{BIC}
 
 \title{
-BIC
+Bayesian Information Content
 }
 \description{
-Calcualtes the Bayesian Information Content
+Calculates the Bayesian Information Content
 }
 \usage{
 BIC(object,...)
@@ -15,7 +15,7 @@ BIC(object,...)
   \item{object}{
     A statistical model, including its data 
   }
-  \item{...} {
+  \item{...}{
     Additional arguments
   }
 }

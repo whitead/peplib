@@ -7,11 +7,15 @@
 \alias{BIC,MotifModelSet-method}
 \alias{classify,MotifModelSet-method}
 \alias{residuals,MotifModelSet-method}
+\alias{logLik,MotifModelSet-method}
+\alias{plot,MotifModelSet-method}
+\alias{predict,MotifModelSet-method}
 
 \title{Class "MotifModelSet"}
 \description{
 A set of \code{\linkS4class{MotifModel}}s
 }
+
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{motifModelSet(seqs, motifNumber=NA, type="fixed", width=4, verbose=TRUE, clusterType="kmeans", maxGuess=10)}.
 }
@@ -63,21 +67,28 @@ Objects can be created by calls of the form \code{motifModelSet(seqs, motifNumbe
   }
 }
 \section{Details}{
-    This is a convienence class providing methods for a few common tasks that are
+    This is a convenience class providing methods for a few common tasks that are
     necessary for analyzing multiple motifs on sequences. The function that
     creates these objects clusters the sequences according
     to a substitution type metric, see \code{\linkS4class{Sequences}},
     and then fits motif models to each of the clusters. The resulting
     motif models can be used to discover the most likely motifs in the
-    sequences and to classify new seqeunces into the motifs. Since there
+    sequences and to classify new sequences into the motifs. Since there
     is clustering used to separate the various motifs, this approach is
     somewhat ad-hoc. There is an expectation-maximization done on motif
     position, but not on which motif each sequence belongs to. Due to
     the ad-hoc nature of dividing sequences into motifs, the ability to
-    find the motif number relies on a Bayesian Information Criterion.
+    find the motif number relies on an elbow plot, which should be
+    viewed by the user.
+
+    This method uses the same motif model for each cluster, but this is
+    not required. More sophisticated modeling may be done by building a
+    \code{\linkS4class{MotifModel}} for each cluster and then combining
+    them by calling \code{new("MotifModelSet", motifs=mlist)}, where
+    mlist is a list of the motif models.
 
     Typically, the number of motifs should be set by hand either through
-    using the \code{plot} function on the sequences or examining the BIC
+    using the \code{plot} function on the sequences or examining the elbow
     plots that come from this function, \code{motifModelSet}. It is
     important to note, as
     mentioned in the \code{\linkS4class{Sequences}} examples, the clustering
@@ -105,71 +116,67 @@ Objects can be created by calls of the form \code{motifModelSet(seqs, motifNumbe
     number indicates no class, as determined from the threshold.}
   
     \item{residuals}{\code{residuals(model, seqs=model@seqs,
-	classes=rep(0,nrow(seqs)), threshold = 0)}: This method classifies
-      \code{seqs} and calculates the number of false positives, false
-      negatives, and a measure of accuracy (see refernces) between 0 and
-      1. \code{classes} should be the true classes for each sequence, where
-      a negative number means it is not in the model, a positive number
-      means it belongs to a specific motif,
-      or 0 means it is simply in any motif. The default value for
-      \code{classes} is all sequences belong in the model. The
-      log-likelihood for each sequence according to the motif is calculated
-      and if any is greater than the \code{threshold}, the sequence is classified as
-      in the model. The sequence is also classified into a particular
-      motif if it is above the threshold. These predictions are tested against the true
-      \code{classes} passed to the method. }
+	classes=rep(0,nrow(seqs)), threshold = 0)}: This method
+	classifies \code{seqs} and calculates the number of false
+	positives, false negatives, and a measure of accuracy between 0
+	and 1. \code{classes} should be the true classes for each
+	sequence, where a negative number means it is not in the model,
+	a positive number means it belongs to a specific motif, or 0
+	means it is simply in any motif. The default value for
+	\code{classes} is all sequences belong in the model. The
+	log-likelihood for each sequence according to the motif is
+	calculated and if any is greater than the \code{threshold}, the
+	sequence is classified as in the model. The sequence is also
+	classified into a particular motif if it is above the
+	threshold. These predictions are tested against the true
+	\code{classes} passed to the method. }
 
-    \item{plot}{\code{plot(model,...)}: This method simply calls the
-      plotting method of \code{\linkS4class{MotifModel}} on each motif
-      in the motif model set. It also prints information about the motif
-      it is about to plot, so that you can keep track of the many plots.}
+    \item{plot}{\code{plot(model,...)}: This method provides a scatter
+    plot which shows the clustering of the sequences and the motif strings of each model
+    as the legend.}
+
+    \item{logLik}{\code{logLik(model)}: This method calculates the
+      (expected) log-likelihood of each of the motif models and sums
+      them together.}
   }
-}
-\references{
-%%  ~~put references to the literature/web site here~~
 }
 \author{
 Andrew White
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{\linkS4class{MotifModel}}, \code{\linkS4class{Sequences}}
 }
 \examples{
-
-data(SHP2Sequences)
-SHP2MList <- motifModelSet(SHP2Sequences, width=6, motifNumber=4,
+data(TULASequences)
+\dontrun{
+TULAMList <- motifModelSet(TULASequences, width=6, motifNumber=4,
 type="fixed")
-plot(SHP2MList@motifs[[1]])
-print(SHP2MList@motifs[[1]])
+plot(TULAMList)
+plot(TULAMList@motifs[[1]])
+print(TULAMList@motifs[[1]])
 
 
-small.mlist <- motifModelSet(SHP2Sequences, motifNumber=2,
+small.mlist <- motifModelSet(TULASequences, motifNumber=2,
 type="fixed")
 ll <- logLik(small.mlist)
 print(ll)
 
-large.mlist <- motifModelSet(SHP2Sequences, motifNumber=5,
+large.mlist <- motifModelSet(TULASequences, motifNumber=5,
 type="optional")
 ll <- logLik(large.mlist)
 print(ll)
 
-
 #split the dataset
-training.size <- nrow(SHP2Sequences) * 2 / 3
-training.indices <- sample(nrow(SHP2Sequences), training.size)
-testing.indices <- setdiff(1:nrow(SHP2Sequences), training.indices)
+training.size <- nrow(TULASequences) * 2 / 3
+training.indices <- sample(nrow(TULASequences), training.size)
+testing.indices <- setdiff(1:nrow(TULASequences), training.indices)
 
-training <- new("Sequences", SHP2Sequences[training.indices,],
-alphabet=SHP2Sequences@alphabet)
+training <- new("Sequences", TULASequences[training.indices,],
+alphabet=TULASequences@alphabet)
 
-testing <- new("Sequences", SHP2Sequences[testing.indices,],
-alphabet=SHP2Sequences@alphabet)
+testing <- new("Sequences", TULASequences[testing.indices,],
+alphabet=TULASequences@alphabet)
 
 #Now we have two sets of sequences
 
@@ -178,6 +185,7 @@ motifNumber=3)
 
 classes <- classify(training.mlist, testing)
 #Now we have the classes on the unseen data
+}
 
 }
 \keyword{classes}

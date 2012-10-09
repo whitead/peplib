@@ -5,21 +5,21 @@
 Antimicrobial peptide sequence responses
 }
 \description{
-  A data frame contianing the antimicrobial activity for each peptide in
+  A data frame containing the antimicrobial activity for each peptide in
   the \code{\link{AMPSequences}} dataset.
 }
 \usage{data(AMPSequences.response)}
 \format{
   \describe{
     \item{\code{Sequence}}{The sequence name}
-    \item{\code{E..coli}}{The activity on organism E..coli}
-    \item{\code{N..gonorrhoeae..F.62.}}{The activity on organism N..gonorrhoeae}
-    \item{\code{N..gonorrhoeae..FA.19.}}{The activity on organism N..gonorrhoeae}
-    \item{\code{L..monocytogenes}}{The activity on organism L..monocytogenes}
-    \item{\code{C..albicans}}{The activity on organism C..albicans}
-    \item{\code{P..aeruginosa}}{The activity on organism P..aeruginosa}
+    \item{\code{E-coli}}{The activity on organism E. coli}
+    \item{\code{N-gonorrhoeae-F.62.}}{The activity on organism N. gonorrhoeae}
+    \item{\code{N-gonorrhoeae-FA.19.}}{The activity on organism N. gonorrhoeae}
+    \item{\code{L-monocytogenes}}{The activity on organism L. monocytogenes}
+    \item{\code{C-albicans}}{The activity on organism C. albicans}
+    \item{\code{P-aeruginosa}}{The activity on organism P. aeruginosa}
     \item{\code{Cytotoxicity}}{Cytotoxicity of peptide}
-    \item{\code{Hemolysis}}{Negative effect on blood}
+    \item{\code{Hemolysis}}{Negative effect on red blood cell}
   }
 }
 

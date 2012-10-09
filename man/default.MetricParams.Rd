@@ -8,7 +8,6 @@ Default parameters for calculating sequence-sequence distances
 Consists of the BLOSUM62 substitution matrix and a gap open penalty of
 10 and gap extension penalty of 0.2. These are used when comparing sequences.
 }
-\usage{data(default.MetricParams)}
 \format{
   An object of class \code{\linkS4class{MetricParams}}
 }

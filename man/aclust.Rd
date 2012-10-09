@@ -47,9 +47,6 @@ measure is the smallest pairwise distance between two sets of points.
 cluster. Each element in the list is an array of integers, where each integer is the
 index of sequence (the row of the input sequence matrix).
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Andrew White
 }
@@ -63,10 +60,10 @@ The "kmeans" is much much faster.
 \examples{
 
 #load some example data
-data(SHP2Sequences)
+data(TULASequences)
 
 ##Cluster
-clusters <- aclust(dist(SHP2Sequences), 3)
+clusters <- aclust(dist(TULASequences), 3, knstart=1)
 print(length(clusters[1]))
 print(length(clusters[2]))
 print(length(clusters[3]))
