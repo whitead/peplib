@@ -467,7 +467,7 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
   for(mindex in 1:length(models)) {
 
     model <- models[[mindex]]
-    seqmatrix <- fullSeqMatrix[seqids[[mindex]],]
+    seqmatrix <- fullSeqMatrix[seqids[[mindex]],]@.Data
     
     m <- (ncol(seqmatrix) - model@width + 1)
     n <- nrow(seqmatrix)
@@ -536,14 +536,15 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
 EMStep.SSOOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
-  
-  #Can be optimized, do this someday 
-  m <- (ncol(seqs) - model@width + 1)
-  n <- nrow(seqs)
+
+  seqmatrix <- seqs@.Data
+
+  m <- (ncol(seqmatrix) - model@width + 1)
+  n <- nrow(seqmatrix)
   
   pseudocount <- length(alphabet)
-  if(pseudocount > nrow(seqs)) {
-    pseudocount <- nrow(seqs)
+  if(pseudocount > nrow(seqmatrix)) {
+    pseudocount <- nrow(seqmatrix)
   }
   
   ztrial <- rep(1., m)
@@ -558,12 +559,12 @@ EMStep.SSOOPS <- function(model, seqs) {
 
   for(i in 1:n) {
     for(j in 1:m) {
-      for(k in 1:ncol(seqs)) {
-	if(k >= j && k < j + model@width && seqs[i,k] <= nrow(mcounts)) {
-          ztrial[j] <- ztrial[j] * model@mmodel[seqs[i,k],k - j + 1]
+      for(k in 1:ncol(seqmatrix)) {
+	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
+          ztrial[j] <- ztrial[j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
 	else {
-          ztrial[j] <- ztrial[j] *  model@bmodel[ seqs[i,k] ]
+          ztrial[j] <- ztrial[j] *  model@bmodel[ seqmatrix[i,k] ]
 	}
         
       }
@@ -573,14 +574,14 @@ EMStep.SSOOPS <- function(model, seqs) {
   
   for(i in 1:n) {
      for(j in 1:m) {
-       for(k in 1:ncol(seqs)) {
+       for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
-           if(seqs[i,k] <= nrow(mcounts)) {
-             mcounts[seqs[i,k],k - j + 1 ] <- mcounts[ seqs[i,k], k - j + 1] +  ztrial[j]
+           if(seqmatrix[i,k] <= nrow(mcounts)) {
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[j]
              msums[k - j + 1] <- msums[k - j + 1] + ztrial[j]
            }
           } else {
-  	      bcounts[seqs[i,k]] <- bcounts[seqs[i,k]] + 1. - ztrial[j]
+  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[j]
               bsum <- bsum + 1. - ztrial[j]
           }
        }
@@ -606,14 +607,14 @@ EMStep.SSOOPS <- function(model, seqs) {
 EMStep.OOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
+  seqmatrix <- seqs@.Data
   
-  #Can be optimized, do this someday 
-  m <- (ncol(seqs) - model@width + 1)
-  n <- nrow(seqs)
+  m <- (ncol(seqmatrix) - model@width + 1)
+  n <- nrow(seqmatrix)
 
   pseudocount <- length(alphabet)
-  if(pseudocount > nrow(seqs)) {
-    pseudocount <- nrow(seqs)
+  if(pseudocount > nrow(seqmatrix)) {
+    pseudocount <- nrow(seqmatrix)
   }
   
   ztrial <- matrix(rep(1, m * n), nrow=n, ncol=m)
@@ -629,26 +630,26 @@ EMStep.OOPS <- function(model, seqs) {
   for(i in 1:n) {
     psum <- 0
     for(j in 1:m) {
-      for(k in 1:ncol(seqs)) {
-	if(k >= j && k < j + model@width && seqs[i,k] <= nrow(mcounts)) {
-            ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqs[i,k],k - j + 1]
+      for(k in 1:ncol(seqmatrix)) {
+	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
+            ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
 	else {
-          ztrial[i,j] <- ztrial[i,j] * model@bmodel[ seqs[i,k] ]
+          ztrial[i,j] <- ztrial[i,j] * model@bmodel[ seqmatrix[i,k] ]
 	}
       }
       psum <- psum + ztrial[i,j]
     }
     ztrial[i,] <- ztrial[i,] / psum
      for(j in 1:m) {
-       for(k in 1:ncol(seqs)) {
+       for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
-           if(seqs[i,k] <= nrow(mcounts)) {
-             mcounts[seqs[i,k],k - j + 1 ] <- mcounts[ seqs[i,k], k - j + 1] +  ztrial[i,j]
+           if(seqmatrix[i,k] <= nrow(mcounts)) {
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[i,j]
              msums[k - j + 1] <- msums[k - j + 1] + ztrial[i,j]
            }
           } else {
-  	      bcounts[seqs[i,k]] <- bcounts[seqs[i,k]] + 1. - ztrial[i,j]
+  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[i,j]
               bsum <- bsum + 1. - ztrial[i,j]
           }
        }
@@ -672,14 +673,15 @@ EMStep.OOPS <- function(model, seqs) {
 EMStep.ZOOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
-  
-  #Can be optimized, do this someday 
-  m <- (ncol(seqs) - model@width + 1)
-  n <- nrow(seqs)
+  seqmatrix <- seqs@.Data
+ 
+
+  m <- (ncol(seqmatrix) - model@width + 1)
+  n <- nrow(seqmatrix)
 
   pseudocount <- length(alphabet)
-  if(pseudocount > nrow(seqs)) {
-    pseudocount <- nrow(seqs)
+  if(pseudocount > nrow(seqmatrix)) {
+    pseudocount <- nrow(seqmatrix)
   }
   
   ztrial <- matrix(rep(1, m * n), nrow=n, ncol=m)
@@ -696,16 +698,16 @@ EMStep.ZOOPS <- function(model, seqs) {
     psum = 0
     noseq <- 1
     #calcultate probability of no occurence of the motif
-    for(j in 1:ncol(seqs)) {
-      noseq <- noseq * model@bmodel[ seqs[i,j] ]
+    for(j in 1:ncol(seqmatrix)) {
+      noseq <- noseq * model@bmodel[ seqmatrix[i,j] ]
     }
     for(j in 1:m) {
-      for(k in 1:ncol(seqs)) {
-	if(k >= j && k < j + model@width && seqs[i,k] <= nrow(mcounts)) {
-          ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqs[i,k],k - j + 1]
+      for(k in 1:ncol(seqmatrix)) {
+	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
+          ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
 	else {
-          ztrial[i,j] <- ztrial[i,j] * model@bmodel[ seqs[i,k] ]
+          ztrial[i,j] <- ztrial[i,j] * model@bmodel[ seqmatrix[i,k] ]
 	}
       }
       psum <- psum + ztrial[i,j]
@@ -715,14 +717,14 @@ EMStep.ZOOPS <- function(model, seqs) {
     model@qarray[i] <- sum(ztrial[i,])
 
      for(j in 1:m) {
-       for(k in 1:ncol(seqs)) {
+       for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
-           if(seqs[i,k] <= nrow(mcounts)) {
-             mcounts[seqs[i,k],k - j + 1 ] <- mcounts[ seqs[i,k], k - j + 1] +  ztrial[i,j]
+           if(seqmatrix[i,k] <= nrow(mcounts)) {
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[i,j]
              msums[k - j + 1] <- msums[k - j + 1] + ztrial[i,j]
            }
           } else {
-	    bcounts[seqs[i,k]] <- bcounts[seqs[i,k]] + 1. - ztrial[i,j]
+	    bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[i,j]
             bsum <- bsum + 1. - ztrial[i,j]
           }
        }
@@ -740,7 +742,7 @@ EMStep.ZOOPS <- function(model, seqs) {
    
    model@zmatrix <- ztrial
 
-   model@gamma <- sum(model@qarray) / nrow(seqs)
+   model@gamma <- sum(model@qarray) / nrow(seqmatrix)
 
   
    return(model)
@@ -761,7 +763,7 @@ logLik.OOPS <- function(model) {
       if(j + model@width - 1 <= ncol(model@seqs)) {
         pj <- 0
         for(k in 1:model@width) {
-          pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs[i,j + k - 1], k])
+          pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs.Data[i,j + k - 1], k])
         }
         pseq <- pseq + pj
       }#PUT BACKGROUND BACK IN
@@ -782,10 +784,10 @@ logLik.SSOOPS <- function(model) {
         pj <- 0
         for(k in 1:ncol(model@seqs)) {
           if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs[i,k], k -j + 1])
+            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs.Data[i,k], k -j + 1])
           }
           else {
-            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs[i,k]])
+            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs.Data[i,k]])
           }
         }
         pseq <- pseq + pj
@@ -810,10 +812,10 @@ logLik.ZOOPS <- function(model) {
         pj <- 0
         for(k in 1:ncol(model@seqs)){
           if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs[i,k], k - j + 1])
+            pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs.Data[i,k], k - j + 1])
           }
           else {
-            pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs[i,k]])
+            pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs.Data[i,k]])
           }
         }
         pseq <- pseq + pj
@@ -822,7 +824,7 @@ logLik.ZOOPS <- function(model) {
     logLik <- logLik + pseq
     #liklihood of peptide being background
     for(j in 1:ncol(model@seqs)) {
-      logLik <- logLik + (1 - model@qarray[i]) * log(model@bmodel[model@seqs[i,k]])
+      logLik <- logLik + (1 - model@qarray[i]) * log(model@bmodel[model@seqs.Data[i,k]])
     }
   }
   names(logLik) <- NULL
@@ -1381,7 +1383,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
     index <- 1
     for(j in 1:base.num) {
       
-      cur.desc <- base.matrix[seqs[i,], j]
+      cur.desc <- base.matrix[seqs@.Data[i,], j]
       cur.mean <- mean(cur.desc)
       cur.var <- var(cur.desc)
       
@@ -1408,7 +1410,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
     }
     if(do.counts) {
       for(j in 1:length(alphabet)) {
-        res[index] <- sum(seqs[i,] == j)
+        res[index] <- sum(seqs@.Data[i,] == j)
         index <- index + 1
       }
     }

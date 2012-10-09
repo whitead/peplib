@@ -148,7 +148,6 @@ Andrew White
   \code{\linkS4class{Sequences}}
 }
 \examples{
-\dontrun{
 #get sequence data
 data(TULASequences)
 
@@ -181,7 +180,7 @@ print(threshold)
 
 print(residuals(TULA.M1), threshold=threshold)
 print(residuals(TULA.M1, seqs=TULA.M2@seqs, threshold=threshold))
-}
+
 }
 
 \keyword{classes}
