@@ -763,7 +763,7 @@ logLik.OOPS <- function(model) {
       if(j + model@width - 1 <= ncol(model@seqs)) {
         pj <- 0
         for(k in 1:model@width) {
-          pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs.Data[i,j + k - 1], k])
+          pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,j + k - 1], k])
         }
         pseq <- pseq + pj
       }#PUT BACKGROUND BACK IN
@@ -784,10 +784,10 @@ logLik.SSOOPS <- function(model) {
         pj <- 0
         for(k in 1:ncol(model@seqs)) {
           if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs.Data[i,k], k -j + 1])
+            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs@.Data[i,k], k -j + 1])
           }
           else {
-            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs.Data[i,k]])
+            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs@.Data[i,k]])
           }
         }
         pseq <- pseq + pj
@@ -812,10 +812,10 @@ logLik.ZOOPS <- function(model) {
         pj <- 0
         for(k in 1:ncol(model@seqs)){
           if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs.Data[i,k], k - j + 1])
+            pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,k], k - j + 1])
           }
           else {
-            pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs.Data[i,k]])
+            pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs@.Data[i,k]])
           }
         }
         pseq <- pseq + pj
@@ -824,7 +824,7 @@ logLik.ZOOPS <- function(model) {
     logLik <- logLik + pseq
     #liklihood of peptide being background
     for(j in 1:ncol(model@seqs)) {
-      logLik <- logLik + (1 - model@qarray[i]) * log(model@bmodel[model@seqs.Data[i,k]])
+      logLik <- logLik + (1 - model@qarray[i]) * log(model@bmodel[model@seqs@.Data[i,k]])
     }
   }
   names(logLik) <- NULL
