@@ -152,7 +152,7 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   #assumes that the first column is the sequence information
   
   data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)  
-  data <- as.character(data[,1])
+  data <- toupper(as.character(data[,1]))
   nseqs <- length(unique(data))
   seqmatrix <- matrix(sapply(data, FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}), nrow=length(data), byrow=TRUE)
   if(length(alphabet) == 0) {
@@ -206,7 +206,7 @@ write.sequences <- function(seqs, motifModel = NULL, file = "", append = FALSE) 
   
   output <- apply(seqs, MARGIN=1, FUN=function(x) {paste(seqs@alphabet[x], collapse="")})
   
-  write.table(output, file=file, append=append)
+  write.table(output, file=file, append=append, row.names=FALSE, col.names=FALSE)
   
 }
 
@@ -973,6 +973,11 @@ print.MotifModel <- function(x,...) {
 
 MotifModel.motifString <- function(model)  {
 
+  #Check for trivial case
+  if(nrow(model@seqs) == 1) {
+    return(model@seqs[1])
+  }
+  
   #find where the motif begins
   ncolz <- 0
   if(class(model) == "SSOOPS") {
