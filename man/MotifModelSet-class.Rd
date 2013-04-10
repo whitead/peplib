@@ -149,7 +149,7 @@ Andrew White
 }
 \examples{
 data(TULASequences)
-\dontrun{
+
 TULAMList <- motifModelSet(TULASequences, width=6, motifNumber=4,
 type="fixed")
 plot(TULAMList)
@@ -185,7 +185,7 @@ motifNumber=3)
 
 classes <- classify(training.mlist, testing)
 #Now we have the classes on the unseen data
-}
+
 
 }
 \keyword{classes}

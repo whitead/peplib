@@ -108,7 +108,7 @@ Andrew White
 \examples{
 ##load example data and plot it
 data(TULASequences)
-\dontrun{plot(TULASequences)}
+plot(TULASequences)
 
 ## Access all sequences which have a 4 in position 1
 print(TULASequences[TULASequences[,1] == 4,])
@@ -121,10 +121,10 @@ plot(TULASequences.subset)
 
 ##Calculate distance matrix on this subset and use agglomerative
 ##  clustering to plotit
-\dontrun{
+
 TULA.dmatrix <- dist(TULASequences.subset)
 TULA.hclusters <- hclust(TULA.dmatrix)
-plot(TULA.hclusters)}
+plot(TULA.hclusters)
 
 }
 \keyword{classes}

@@ -40,7 +40,7 @@ rownames(bs85) <- aabet
 
 default.MetricParams <- new("MetricParams", smatrix=bs85, gapOpen=-10, gapExtension=-0.2)
 
-sDist <- function(s1, s2, params=default.MetricParams) {
+sdist <- function(s1, s2, params=default.MetricParams) {
   
   distance <- rep(NA, length(s1))
 
@@ -89,16 +89,16 @@ sDist <- function(s1, s2, params=default.MetricParams) {
 }
 
 sHammingDist <- function(s1, s2, params) {
-  distance <- sapply(1:min(length(s1),length(s2)), FUN=function(x) {as.double(s1[x] == s2[x])})
-  distance <- distance - (max(length(s1), length(s2)) - min(length(s1), length(s2)))
+  distance <- sum(sapply(1:min(length(s1),length(s2)), FUN=function(x) {as.double(s1[x] != s2[x])}))
+  distance <- distance + abs(length(s1) - length(s2))
+  return(as.double(distance))
 }
 
 dist.Sequences <- function(seqs, method="substitution", params=default.MetricParams, ...) {
-                                        #for speed, get rid of all that generics stuff
   seqs <- seqs@.Data
   
   if(method == "substitution" || method=="euclidian") {
-    dist <- sDist
+    dist <- sdist
   }
   if(method == "hamming") {
     dist <- sHammingDist
@@ -137,12 +137,12 @@ setMethod("[", signature=c("Sequences"), definition=function(x, i, j, ..., drop)
 } )
 
 
-wdist <- function(seqmatrix, sweights=NULL, dist=sDist, params=default.MetricParams) {
+wdist <- function(seqmatrix, sweights=NULL, dist=sdist, params=default.MetricParams) {
   if(is.null(sweights)){
     sweights <- createSWeights(seqmatrix)
   }		      
 
-  dmatrix <- sDist(seqmatrix, dist, params)
+  dmatrix <- sdist(seqmatrix, dist, params)
   dmatrix <- dmatrix * (sweights %*% t(sweights))
   return(dmatrix)
 }
@@ -240,21 +240,26 @@ write.fasta <- function(seqs, motifModel = NULL, file = "",  eol = "\n") {
 
 }
 
-plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber), legendText=c()) {
-  
+plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, distanceMatrix=dist.Sequences(seqs, params=params), clusters=aclust(distanceMatrix, clusterNumber), legendText=c(), main="") {
+
+  #This makes it so that the coloring follows the size of the clusters. Makes plots reproducible since the
+  #cluster indices from kmeans are not reproducible.
+  idmap <- order(as.integer(lapply(clusters, length)))
+    
   colors <- rep("black", nrow(seqs))
   shades <- hcl(h=1:clusterNumber * (360 / clusterNumber), c=90, l=70 )
   for(i in 1:length(clusters)) {
-    colors[clusters[[i]]] <- shades[i]
+    colors[clusters[[idmap[i]]]] <- shades[i]
   }
   
 #  fit <- cmdscale(distanceMatrix, eig=T, k=2)
   fit <- prcomp(distanceMatrix)
+  print(summary(fit))
   x <- fit$x[,1]
   y <- fit$x[,2]
-  plot(x,y,pch=19, xlab="Component 1", ylab="Component 2", col=colors)
+  plot(x,y,xlab="Component 1", ylab="Component 2", col=colors, main=main)
   if(length(legendText) > 0) {
-    legend(max(x), max(y) *1.25, legendText, col=shades,text.col="black", pch=rep(19, length(legendText)), xpd=TRUE)
+    legend(max(x), max(y) * 1.25, legendText, col=shades,text.col="black", pch=rep(1, length(legendText)), xpd=TRUE)
   }
 }
 
@@ -308,7 +313,7 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
       ll$logLik[i] <- logLik(motifModelSet(seqs, i, type, width, verbose, clusterType))
     }
     cat("\n")
-    plot(ll, xlab="Cluster Number", pch=19, col="black", main=plotMain)
+    plot(ll, xlab="Cluster Number", col="black", main=plotMain)
     lines(ll, col="black", lty=1)
     motifNumber <- ll$clusterN[which.min(ll$logLik)]
   }else if(motifNumber == 1) {
@@ -1051,7 +1056,7 @@ plot.MotifModelSet <- function(x,...) {
   par(mar=c(5,4,2,5))
   plot(x,y,xlab="Component 1", ylab="Component 2", col=colors)
 
-  legend(max(x) / 2, max(y) * 1.25, legendText, col=shades,text.col="black", pch=rep(19, clusterNumber), xpd=TRUE)
+  legend(max(x) / 2, max(y) * 1.25, legendText, col=shades,text.col="black", pch=rep(1, clusterNumber), xpd=TRUE)
 
 
   
@@ -1145,7 +1150,7 @@ plot.MotifModel <- function(x,...) {
 
 setMethod("plot", "MotifModel", function(x, y, ...) plot.MotifModel(x,...))
 
-aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=3) {	   
+aclust <- function(sDistMatrix, clusterNumber, verbose=T, type="kmeans", knstart=20) {	   
   
   if(class(sDistMatrix) == "Sequences") {
     sDistMatrix <- dist(sDistMatrix)
