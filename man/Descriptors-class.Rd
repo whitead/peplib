@@ -16,14 +16,14 @@ vs. the space of possible sequences. The class should be created by a call to \c
 arguments and details below) or \code{\link{simpleDescriptors}}.
 }
 \section{Objects from the Class}{
-Objects can be created by calls of the form \code{descriptors(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01)}
+Objects can be created by calls of the form \code{descriptors(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01)}
 }
 \section{Arguments}{
 \describe{
   \item{seqs}{A \code{\linkS4class{Sequences} object}}
   \item{response}{An optional array containing responses for each
     sequence. \code{nrow(seqs)} should be equal to \code{length(response)}.}
-  \item{base.matrix}{A \code{data.frame} containing descriptors
+  \item{base.frame}{A \code{data.frame} containing descriptors
     calculated on each amino acid. See details.}
   \item{do.var}{Calculate the additional descriptors which are the
     variance of single residue descriptors along the sequence}
@@ -59,7 +59,7 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   \code{\link{wilcox.test}}. That is a non-parametric version of the
   Student's t-test.
 
-  The calculations are based on the given \code{base.matrix}
+  The calculations are based on the given \code{base.frame}
   parameter. Given that matrix, which contains the descriptors
   calculated on all the individual amino acids, it is possible to
   calculate many sequence level descriptors. If the means are being
@@ -91,7 +91,7 @@ motif discovery.  \code{include.staistics} will calculate the p-values
 for each of the descriptors. This is only practical for smaller lengths;
 less than 10.
 
-  If \code{base.matrix} is \code{NA}, then the default will be used,
+  If \code{base.frame} is \code{NA}, then the default will be used,
   \code{\link{defaultBaseMatrix}}. See the documentation on that dataset
   for more information.
   

@@ -1324,7 +1324,7 @@ findMinDistElement <- function(sDistMatrix) {
 
 simpleDescriptors <- function(seqs, response=numeric(0), include.statistics=FALSE) {
 
-  desc <- descriptors(seqs, response, base.matrix=defaultBaseMatrix[,c("count.BasicGroups", "count.AcidicGroups", "count.PolarGroups", "count.NonPolarGroups", "count.AromaticGroups", "count.ChargedGroups",  "ALogP")], do.var=F,
+  desc <- descriptors(seqs, response, base.frame=defaultBaseMatrix[,c("count.BasicGroups", "count.AcidicGroups", "count.PolarGroups", "count.NonPolarGroups", "count.AromaticGroups", "count.ChargedGroups",  "ALogP")], do.var=F,
   alags=c(), do.counts=F, do.mean=T, do.position=F,
   include.statistics=include.statistics, accuracy=0.001)
 
@@ -1333,7 +1333,7 @@ simpleDescriptors <- function(seqs, response=numeric(0), include.statistics=FALS
   
 }
 
-descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=FALSE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
+descriptors <- function(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=FALSE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
 
   
   if(include.statistics) {
@@ -1341,13 +1341,20 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
       cat("Warning: the sequence space is very large for calculating statistics")
     }
   }
-
-  if(length(base.matrix) == 1 && is.na(base.matrix)) {
-    base.matrix <- defaultBaseMatrix
+  
+  if(length(base.frame) == 1 && is.na(base.frame)) {
+    base.frame <- defaultBaseMatrix
   }
+
+  base.matrix <- data.matrix(base.frame)
+
+
+  #For speed, create matrix vesion of sequences
+  seqmatrix <- data.matrix(seqs@.Data)
+  
   
   #get number of descriptors
-  base.num <- ncol(base.matrix)
+  base.num <- ncol(base.frame)
   multiplier <- 0
   if(!is.null(alags)) {
     multiplier <- length(alags)
@@ -1357,7 +1364,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
   if(do.mean)
     multiplier <- multiplier + 1
   if(do.position)
-    multiplier <- multiplier + ncol(seqs)
+    multiplier <- multiplier + ncol(seqmatrix)
 
 
   desc.num <- base.num * multiplier
@@ -1369,22 +1376,22 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
   index <- 1
   for(i in 1:base.num) {
     if(do.mean) {
-      dnames[index] <- paste(names(base.matrix)[i], 'AVG', sep=".")
+      dnames[index] <- paste(names(base.frame)[i], 'AVG', sep=".")
       index <- index + 1
     }
     if(do.var) {
-      dnames[index] <- paste(names(base.matrix)[i], 'VAR', sep=".")
+      dnames[index] <- paste(names(base.frame)[i], 'VAR', sep=".")
       index <- index + 1
     }
     if(!is.null(alags)) {
       for(j in 1:length(alags)) {
-        dnames[index] <- paste(names(base.matrix)[i], 'AUTO', alags[j], sep=".")
+        dnames[index] <- paste(names(base.frame)[i], 'AUTO', alags[j], sep=".")
         index <- index + 1
       }
     }
     if(do.position) {
-      for(j in 1:ncol(seqs)) {
-        dnames[index] <- paste(names(base.matrix)[i], 'P',j,sep=".")
+      for(j in 1:ncol(seqmatrix)) {
+        dnames[index] <- paste(names(base.frame)[i], 'P',j,sep=".")
         index <- index + 1
       }
     }
@@ -1401,14 +1408,14 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
 
   
   #Now calculate the descriptors
-  desc <- empty.df(dnames, rownames(seqs))
+  desc <- empty.matrix(dnames, rownames(seqmatrix))
   finished <- 0
   res <- rep(NA, base.num * multiplier)
-  for(i in 1:nrow(seqs)) {
+  for(i in 1:nrow(seqmatrix)) {
     index <- 1
     for(j in 1:base.num) {
       
-      cur.desc <- base.matrix[seqs@.Data[i,], j]
+      cur.desc <- base.matrix[seqmatrix[i,], j]
       cur.mean <- mean(cur.desc)
       cur.var <- var(cur.desc)
       
@@ -1427,7 +1434,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
         }
       }
       if(do.position){
-        for(k in 1:ncol(seqs)) {
+        for(k in 1:ncol(seqmatrix)) {
           res[index] <- cur.desc[k]
           index <- index + 1
         }
@@ -1435,7 +1442,7 @@ descriptors <- function(seqs, response=numeric(0), base.matrix=NA, do.var=TRUE, 
     }
     if(do.counts) {
       for(j in 1:length(alphabet)) {
-        res[index] <- sum(seqs@.Data[i,] == j)
+        res[index] <- sum(seqmatrix[i,] == j)
         index <- index + 1
       }
     }
@@ -1550,7 +1557,7 @@ autocorrelation <- function(data,ef=mean(data), v=var(data), lag=1) {
                                     
 factory.descriptor <- function(data) {
 
-  d <- new("Descriptors", data@.Data, row.names=rownames(data), names=colnames(data), response=numeric(0), pvalues=rep(0, ncol(data)))
+  d <- new("Descriptors", data.frame(data@.Data), row.names=rownames(data), names=colnames(data), response=numeric(0), pvalues=rep(0, ncol(data)))
   names(d@pvalues) <- colnames(data)
   return(d)
   
@@ -1558,6 +1565,13 @@ factory.descriptor <- function(data) {
 
 empty.df <- function(cnames, rnames, default=NA) {
   df<-data.frame(matrix(rep(default,length(cnames)*length(rnames)), nrow=length(rnames)))
+  colnames(df)<-cnames
+  rownames(df) <- rnames
+  return(df)
+}
+
+empty.matrix <- function(cnames, rnames, default=NA) {
+  df<-matrix(rep(default,length(cnames)*length(rnames)), nrow=length(rnames))
   colnames(df)<-cnames
   rownames(df) <- rnames
   return(df)
