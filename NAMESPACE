@@ -1,6 +1,6 @@
 importFrom("methods", setClass, setGeneric, setMethod, representation, new)
 exportClasses(Sequences, Descriptors, MetricParams, MotifModelSet, MotifModel)
-export(default.MetricParams, descriptors, simpleDescriptors, motifModel, aclust, motifModelSet, changeClusterFormat, read.sequences, write.sequences, write.fasta, read.fasta, dist.Sequences)
+export(default.MetricParams, descriptors, simpleDescriptors, motifModel, aclust, motifModelSet, changeClusterFormat, read.sequences, write.sequences, write.fasta, read.fasta)
 importFrom("utils", data)
 importFrom("graphics", plot)
 importFrom("stats", dist, kmeans, residuals, logLik, predict, BIC)

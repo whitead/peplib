@@ -4,7 +4,6 @@
 \alias{Descriptors}
 \alias{descriptors}
 \alias{Descriptors-class}
-%%\alias{FiveTwoCV,Descriptors-method}
 \alias{plot,Descriptors-method}
 
 \title{Class "Descriptors"}
@@ -119,26 +118,6 @@ Class \code{"\linkS4class{list}"}, by class "data.frame", distance 2.
 Class \code{"\linkS4class{oldClass}"}, by class "data.frame", distance 2.
 Class \code{"\linkS4class{vector}"}, by class "data.frame", distance 3.
 }
-%%\section{Methods}{
-%%  \describe{
-%%    \item{FiveTwoCV}{\code{FiveTwoCV(desc, resp=desc@response,
-%%	modelFxn)}: This method provides a way to preform 5x2
-%%      cross-validation on the modelling function \code{modelFxn} on the
-%%      descriptors. See \link{FiveTwoCV} for more information about the
-%%      cross-validation and model function. }
-%%    \item{plot}{\code{plot(desc,...)}:
-%%      This method makes a few plots used for exploring the descriptor
-%%      space. First, if there is response for each sequence, a histogram
-%%      of the correlation of the response with the descriptors is
-%%      plotted. Next, a barplot showing the most correlated descriptors
-%%      (with the response) are plotted. A PCA is then preformed and a
-%%      scree plot is shown, a projection onto the top PCAs, and finally a
-%%      biplot. The scree plot and projection can help you judge if a few
-%%      principal components can describe your dataset and the biplot can
-%%      show you which descriptors are actually spreading out your sequences.
-%%    }
-%%	 }
-%%}
 
 \author{
 Andrew White
@@ -149,7 +128,7 @@ Andrew White
 \code{\linkS4class{Sequences}}, \code{\link{defaultBaseMatrix}},
 \code{\link{wilcox.test}}
 }
-\examples{\dontrun{
+\examples{
 
 #calculate some descriptors
 data(SHP2Sequences)
@@ -176,6 +155,6 @@ do.position=FALSE, include.statistics=FALSE)
 plot(AMPdesc)
 
 
-}}
+}
 \keyword{classes}
 \keyword{datagen}

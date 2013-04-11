@@ -4,7 +4,6 @@
 \docType{class}
 \alias{Sequences-class}
 \alias{dist,Sequences-method}
-%%\alias{FiveTwoCV,Sequences-method}
 \alias{plot,Sequences-method}
 \alias{rbind,Sequences-method}
 \alias{[,Sequences-method}
@@ -42,7 +41,7 @@ Objects can be created by calls of the form \code{new("Sequences", data,
 \section{Methods}{
   \describe{
     \item{dist}{\code{dist(seqs, method="substitution",
-	params=default.MetricParams,...)}} dist calculates the
+	params=default.MetricParams,...)}: dist calculates the
       sequence-sequences distance matrix. Use
       \code{method="substitution"} to use a substitution matrix for weighting
       sequence mutations and use \code{method="hamming"} to use equal weighting
@@ -51,16 +50,7 @@ Objects can be created by calls of the form \code{new("Sequences", data,
     given a weight of 1 using the hamming method or the score from the
     corresponding substitution matrix when using the substitution
     method. The distance matrix is converted to a dissimilarity distance
-    by making all elements negative and adding the maximum score/weight
-    
-%%    \item{FiveTwoCV}{\code{FiveTwoCV(seqs, classes, motifNumber=1,
-%%    motifModelType="fixed"}: This method is used for motif modelling on
-%%    the sequences. It clusters the sequences, fits motifs to the
-%%    clusters, and then tests their predictive power using 5x2
-%%    cross-validation. This method combines many of the steps described
-%%    elsewhere (see \code{\linkS4class{MotifModelSet}}). As a result, it
-%%    returns a list of metrics for how well the motifs fit. This method
-%%    can be used, for example, in determining the number of motifs.}
+    by making all elements negative and adding the maximum score/weight}
     \item{plot}{\code{plot(seqs, clusterNumber=4,
 	params=default.MetricParams,
 	distanceMatrix=dist.Sequences(seqs,
@@ -83,7 +73,7 @@ Objects can be created by calls of the form \code{new("Sequences", data,
     the traditional rbind method by passing the alphabet along. Note
     that most matrix methods editing methods do not return a Sequence
     class by default, except this rbind method. }
-	 }
+  }
 }
 
 \author{

@@ -156,6 +156,10 @@ explode <- function(string, max, alphabet) {
   return(result)
 }
 
+processError <- function(e, mymessage) {
+  cat(paste(mymessage, "\n"))
+}
+
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
                  fill = FALSE, comment.char="", alphabet=aabet) {
   
@@ -163,16 +167,24 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
 
   #Try loading the file
   tryCatch(data <- read.table(file, header=header, sep=sep, quote=quote, dec=dec, fill=fill, comment.char=comment.char), error=function(e) {processError(e, "Could not read file")})
-
+  
   #Ok, continue to spread out sequences
-  tryCatch(data <- toupper(as.character(data[,1])), error=function(e) {processError(e, "Non-letters in sequence file")})
+  t <- tryCatch(data <- toupper(as.character(data[,1])), error=function(e) {processError(e, "Non-letters in sequence file")})
+
+  if(inherits(t, "try-error")) return
+  
   nseqs <- length(unique(data))
-  tryCatch(maxlength <- max(sapply(data, FUN=function(x) {length(unlist(strsplit(x, split="")))})), error=function(e) {processError(e, "Failed to split sequence into characters")})
+  t <- tryCatch(maxlength <- max(sapply(data, FUN=function(x) {length(unlist(strsplit(x, split="")))})), error=function(e) {processError(e, "Failed to split sequence into characters")})
 
-  tryCatch( seqmatrix <- matrix(sapply(data, FUN=function(x) {explode(x, maxlength, alphabet)}), nrow=length(data), byrow=TRUE), error=function(e) {processError(e, "Failed to process non-cannonical amino acids")})
+  if(inherits(t, "try-error")) return
+  
+ t <- tryCatch( seqmatrix <- matrix(sapply(data, FUN=function(x) {explode(x, maxlength, alphabet)}), nrow=length(data), byrow=TRUE), error=function(e) {processError(e, "Failed to process non-cannonical amino acids")})
 
+  if(inherits(t, "try-error")) return
 
-  tryCatch(seqmatrix <- apply(seqmatrix, MARGIN=2, FUN=function(x) {sapply(x, FUN=function(y) {which(alphabet == as.character(y))})}), error=function(e) {processError(e, "Failed to convert to numerical representation")})
+  t <- tryCatch(seqmatrix <- apply(seqmatrix, MARGIN=2, FUN=function(x) {sapply(x, FUN=function(y) {which(alphabet == as.character(y))})}), error=function(e) {processError(e, "Failed to convert to numerical representation")})
+
+  if(inherits(t, "try-error")) return
 
   rnames <- apply(seqmatrix, MARGIN=1, FUN=function(x) {paste(alphabet[x], collapse="")})
   for(i in 1:(length(rnames) - 1)) {
