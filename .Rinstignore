@@ -1,5 +1,0 @@
-.gitignore
-man/FiveTwoCV\.Rd
-\.git/.*
-main/classify\.Rd
-man/ROC\.Rd

@@ -269,7 +269,6 @@ plot.Sequences <- function(seqs, clusterNumber=3, params=default.MetricParams, d
   
 #  fit <- cmdscale(distanceMatrix, eig=T, k=2)
   fit <- prcomp(distanceMatrix)
-  print(summary(fit))
   x <- fit$x[,1]
   y <- fit$x[,2]
   plot(x,y,xlab="Component 1", ylab="Component 2", col=colors, main=main)
