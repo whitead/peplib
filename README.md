@@ -52,6 +52,10 @@ That will calculate about 10 descriptors. To calculate a few hundred, type
 
     seq.desc <- descriptors(seq)
 
+These descriptors are all relative to glycine. So, for example,
+molecular weight is not the actual molecular weight but the difference
+between a given amino acid and glycine. 
+
 Plotting Sequences
 --------------------
 
