@@ -9,7 +9,7 @@ Clusters a matrix of peptide sequences using kmeans or agglomerative clustering
 }
 \usage{
 aclust(sDistMatrix, clusterNumber, verbose = T, type = "kmeans", knstart
-= 3)
+= 20)
 }
 
 \arguments{

@@ -147,30 +147,45 @@ wdist <- function(seqmatrix, sweights=NULL, dist=sdist, params=default.MetricPar
   return(dmatrix)
 }
 
+explode <- function(string, max, alphabet) {
+  result <- strsplit(string, split="")[[1]]
+  while(length(result) < max) {
+    result <- c(result,"-")
+  }
+  result <- sapply(result, FUN=function(x){if(!(x %in% alphabet)) {"B"} else {x}})
+  return(result)
+}
+
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
                  fill = FALSE, comment.char="", alphabet=aabet) {
-  #assumes that the first column is the sequence information
   
-  data <- read.table(file, sep=sep, quote=quote, dec=dec, fill=fill, header=header, comment.char=comment.char)  
-  data <- toupper(as.character(data[,1]))
+  #assumes that the first column is the sequence information
+
+  #Try loading the file
+  tryCatch(data <- read.table(file, header=header, sep=sep, quote=quote, dec=dec, fill=fill, comment.char=comment.char), error=function(e) {processError(e, "Could not read file")})
+
+  #Ok, continue to spread out sequences
+  tryCatch(data <- toupper(as.character(data[,1])), error=function(e) {processError(e, "Non-letters in sequence file")})
   nseqs <- length(unique(data))
-  seqmatrix <- matrix(sapply(data, FUN=function(x) {unlist(strsplit(x, split="", fixed=T))}), nrow=length(data), byrow=TRUE)
-  if(length(alphabet) == 0) {
-    alphabet = unique(c(seqmatrix))
-  }
-  seqmatrix <- apply(seqmatrix, MARGIN=2, FUN=function(x) {sapply(x, FUN=function(y) {which(alphabet == as.character(y))})})
+  tryCatch(maxlength <- max(sapply(data, FUN=function(x) {length(unlist(strsplit(x, split="")))})), error=function(e) {processError(e, "Failed to split sequence into characters")})
+
+  tryCatch( seqmatrix <- matrix(sapply(data, FUN=function(x) {explode(x, maxlength, alphabet)}), nrow=length(data), byrow=TRUE), error=function(e) {processError(e, "Failed to process non-cannonical amino acids")})
+
+
+  tryCatch(seqmatrix <- apply(seqmatrix, MARGIN=2, FUN=function(x) {sapply(x, FUN=function(y) {which(alphabet == as.character(y))})}), error=function(e) {processError(e, "Failed to convert to numerical representation")})
 
   rnames <- apply(seqmatrix, MARGIN=1, FUN=function(x) {paste(alphabet[x], collapse="")})
   for(i in 1:(length(rnames) - 1)) {
     if(rnames[i] %in% rnames[(i + 1):length(rnames)]) {
-      rnames[i] <- paste(rnames[i], ".", sum(rnames[i] == rnames[(i + 1):length(rnames)]), sep="")
-    }
+    rnames[i] <- paste(rnames[i], ".", sum(rnames[i] == rnames[(i + 1):length(rnames)]), sep="")
   }
-  
+  }
+
   rownames(seqmatrix) <- rnames
 
-  
+
   seqs <- new("Sequences",  seqmatrix, alphabet=alphabet, nseqs=nseqs)
+
   
   return(seqs)
 }
