@@ -138,11 +138,6 @@ SHP2desc <- descriptors(SHP2Sequences, do.var=FALSE,
 alags=c(), do.mean=TRUE, do.counts=FALSE,
 do.position=FALSE, include.statistics=FALSE)
 
-
-#plot them
-plot(SHP2desc)
-
-
 #get some descriptors and response sets
 data(AMPSequences)
 data(AMPSequences.response)
@@ -150,9 +145,6 @@ data(AMPSequences.response)
 AMPdesc <- descriptors(AMPSequences, response=AMPSequences.response[,1], do.var=FALSE,
 alags=c(), do.mean=TRUE, do.counts=FALSE,
 do.position=FALSE, include.statistics=FALSE)
-
-#plot with descriptors
-plot(AMPdesc)
 
 
 }
