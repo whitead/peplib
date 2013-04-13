@@ -15,7 +15,9 @@ vs. the space of possible sequences. The class should be created by a call to \c
 arguments and details below) or \code{\link{simpleDescriptors}}.
 }
 \section{Objects from the Class}{
-Objects can be created by calls of the form \code{descriptors(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=TRUE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01)}
+Objects can be created by calls of the form \code{descriptors(seqs,
+  response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3),
+  do.mean=TRUE, do.counts=TRUE, do.position=TRUE, remove.nonvar=FALSE, alphabet=seqs@alphabet,include.statistics=TRUE, accuracy=0.01)}
 }
 \section{Arguments}{
 \describe{
@@ -31,6 +33,7 @@ Objects can be created by calls of the form \code{descriptors(seqs, response=num
   \item{do.counts}{Provide descriptors of various counts, like the
     number of each residue type}
   \item{do.position}{Provide position specific descriptors}
+  \item{remove.nonvar}{Remove descriptors that do not change across the dataset}
   \item{alphabet}{The alphabet to use for calculating counts.}
   \item{include.statistics}{If \code{TRUE}, the function will calculate
     the p-values of the descriptors. See details.}

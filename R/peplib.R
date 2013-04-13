@@ -1336,15 +1336,14 @@ findMinDistElement <- function(sDistMatrix) {
 simpleDescriptors <- function(seqs, response=numeric(0), include.statistics=FALSE) {
 
   desc <- descriptors(seqs, response, base.frame=defaultBaseMatrix[,c("count.BasicGroups", "count.AcidicGroups", "count.PolarGroups", "count.NonPolarGroups", "count.AromaticGroups", "count.ChargedGroups",  "ALogP")], do.var=F,
-  alags=c(), do.counts=F, do.mean=T, do.position=F,
-  include.statistics=include.statistics, accuracy=0.001)
+  alags=c(), do.counts=F, do.mean=T, do.position=F, include.statistics=include.statistics,  accuracy=0.001)
 
 
   return(desc)
   
 }
 
-descriptors <- function(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=FALSE, do.position=TRUE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
+descriptors <- function(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, alags=c(1,2,3), do.mean=TRUE, do.counts=FALSE, do.position=TRUE, remove.nonvar=FALSE, alphabet=seqs@alphabet, include.statistics=TRUE, accuracy=0.01) {
 
   
   if(include.statistics) {
@@ -1464,16 +1463,18 @@ descriptors <- function(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, a
 
 
   #Remove non-varying descriptors
-  desc.var <- apply(desc, MARGIN=2, FUN=var)
+  if(remove.nonvar) {
+    desc.var <- apply(desc, MARGIN=2, FUN=var)
 
-  if(sum(which(desc.var == 0)) > 0) {
-    if(do.counts) {
-      if(sum(which(desc.var[1:count.start.index] == 0)) > 0) {
-        desc <- desc[-which(desc.var[1:count.start.index] == 0)]
+    if(sum(which(desc.var == 0)) > 0) {
+      if(do.counts) {
+        if(sum(which(desc.var[1:count.start.index] == 0)) > 0) {
+          desc <- desc[-which(desc.var[1:count.start.index] == 0)]
+        }
       }
-    }
-    else {
-      desc <- desc[-which(desc.var == 0)]
+      else {
+        desc <- desc[-which(desc.var == 0)]
+      }
     }
   }
 
