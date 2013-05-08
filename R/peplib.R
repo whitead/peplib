@@ -165,14 +165,26 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   
   #assumes that the first column is the sequence information
 
+  #first, make sure the given alphabet contains error/gap characeters
+  if(!("B" %in% alphabet)) {
+    alphabet <- c(alphabet, "B")
+    cat("Warning: Added unknown amino acid code B to given alphabet\n") 
+  }
+
+  if(!("-" %in% alphabet)) {
+    alphabet <- c(alphabet, "-")
+    cat("Warning: Added gap amino acid code -  to given alphabet\n") 
+  }
+
+
   #Try loading the file
   tryCatch(data <- read.table(file, header=header, sep=sep, quote=quote, dec=dec, fill=fill, comment.char=comment.char), error=function(e) {processError(e, "Could not read file")})
-  
+
   #remove duplicates if necessary
   if(remove.duplicates) {
     data <- data[!duplicated(data[,1]),]
   }
-  
+
   #Ok, continue to spread out sequences
   t <- tryCatch(data <- toupper(as.character(data[,1])), error=function(e) {processError(e, "Non-letters in sequence file")})
 
