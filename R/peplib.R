@@ -161,12 +161,17 @@ processError <- function(e, mymessage) {
 }
 
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
-                 fill = FALSE, comment.char="", alphabet=aabet) {
+                 fill = FALSE, comment.char="", alphabet=aabet, remove.duplicates=FALSE) {
   
   #assumes that the first column is the sequence information
 
   #Try loading the file
   tryCatch(data <- read.table(file, header=header, sep=sep, quote=quote, dec=dec, fill=fill, comment.char=comment.char), error=function(e) {processError(e, "Could not read file")})
+  
+  #remove duplicates if necessary
+  if(remove.duplicates) {
+    data <- data[!duplicated(data[,1]),]
+  }
   
   #Ok, continue to spread out sequences
   t <- tryCatch(data <- toupper(as.character(data[,1])), error=function(e) {processError(e, "Non-letters in sequence file")})
@@ -1532,7 +1537,7 @@ descriptors <- function(seqs, response=numeric(0), base.frame=NA, do.var=TRUE, a
     #Calculate estimated p-values, the amount of overlap between the two distributions using Mann-Whitney test
     index <- 1
     for(i in 1:ncol(ddesc)) {
-      if(desc.var[i] != 0) {
+      if(!(remove.nonvar && desc.var[i] == 0)) {
         x <- ddesc[,i]
         y <- desc[,i]
         p.value <- wilcox.test(x,y)$p.value

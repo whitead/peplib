@@ -72,6 +72,7 @@ for creating the desrciptors of peptide sequences.
       from the protein databank}
     \item{\code{CaSD}}{The solvation density near the C-alpha carbon on
       the amino acid}
+    \item{\code{netCharge}}{Net charge}
   }
 }
 \source{

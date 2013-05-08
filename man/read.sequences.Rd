@@ -9,7 +9,7 @@ This will read in a file of sequences and create a Sequences-class object.
 \usage{
 read.sequences(file, header = FALSE, sep = "",
 quote = "\"", dec = ".", fill = FALSE,
-comment.char = "", alphabet = aabet)
+comment.char = "", alphabet = aabet, remove.duplicates=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -69,8 +69,11 @@ the character used in the file for decimal points.
   \item{alphabet}{
     The alphabet to use for the sequences. The default alphabet contains
   the canonical 20 amino acids, as well as B, Z, X, and \code{-}, where X is
-  an unspecified residue and \code{-} is a gap. 
+  an unspecified residue and \code{-} is a gap.
 }
+\item{remove.duplicates}{
+  Set to true to remove duplicate sequences.
+}  
 }
 \details{
   See the details for \code{\link{read.table}} for more information about
