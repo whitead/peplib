@@ -26,6 +26,12 @@ an R session
 
     install.packages("peplib")
 
+Documentation
+--------------------
+Check out the `tutorial.pdf` file. It contains
+many more details than the brief information below and detailed
+tutorials.
+
 
 Loading Sequences
 --------------------
