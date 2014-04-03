@@ -49,7 +49,6 @@ Objects can be created by calls of the form \code{motifModel(seqs,
       
     \item{\code{width}}{The number of residues in the motif, the width
       of the motif.}
-    
     }
   }
 

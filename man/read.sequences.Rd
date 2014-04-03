@@ -9,7 +9,8 @@ This will read in a file of sequences and create a Sequences-class object.
 \usage{
 read.sequences(file, header = FALSE, sep = "",
 quote = "\"", dec = ".", fill = FALSE,
-comment.char = "", alphabet = aabet, remove.duplicates=FALSE)
+comment.char = "", alphabet = aabet, remove.duplicates=FALSE,
+weights=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -73,6 +74,11 @@ the character used in the file for decimal points.
 }
 \item{remove.duplicates}{
   Set to true to remove duplicate sequences.
+}
+\item{weights}{
+  Positive weights to assign to \code{Sequences} object. Will be used in
+  motif discovery and can be accessed in the \code{weights} slot of the
+  \code{Sequences} object (\code{seqs@weights}).
 }  
 }
 \details{

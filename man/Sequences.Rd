@@ -20,7 +20,12 @@ sequences. The sequences are represented as integers, where each integer
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("Sequences", data,
-  nrow, ncol, byrow, dimnames, ...)}.
+   alphabet, nseqs, weights)}. Alternatively, see
+ \code{\link{read.sequences}} for reading sequences from a file. Use a
+ \code{\link{textConnection}} to simulate a file if you want to convert
+ a text string into sequences.
+ 
+ 
 }
 \section{Slots}{
   \describe{
@@ -29,6 +34,8 @@ Objects can be created by calls of the form \code{new("Sequences", data,
     \item{\code{alphabet}:}{Object of class \code{"character"} The
       character representation of each integer }
     \item{\code{nseqs}:}{The number of unique sequences in the class.}
+    \item{\code{weights}:}{Weights for each sequence which are used for
+      motif discovery. Higher weight means more important sequence.}
     }
 }
 

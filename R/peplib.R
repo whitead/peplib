@@ -1,5 +1,5 @@
 #SUPER IMPORTANT NOTE: These methods are fairly general, but they assume the last character in the alphabet is a gap character.
-setClass("Sequences", representation(alphabet="character", nseqs="numeric"), contains="matrix")
+setClass("Sequences", representation(alphabet="character", nseqs="numeric", weights="numeric"), contains="matrix")
 setClass("Descriptors", representation(response="numeric", pvalues="numeric"), contains="data.frame")
 setClass("MetricParams", representation(smatrix="matrix", gapOpen="numeric", gapExtension="numeric"))
 setClass("MotifModel", representation(mmodel="matrix", bmodel="numeric", width="integer", seqs="Sequences", np="integer"))
@@ -38,7 +38,7 @@ aabet <- c("A",  "R",  "N",  "D",  "C",  "Q",  "E",  "G",  "H",  "I",  "L",  "K"
 colnames(bs85) <- aabet
 rownames(bs85) <- aabet
 
-default.MetricParams <- new("MetricParams", smatrix=bs85, gapOpen=-10, gapExtension=-0.2)
+default.MetricParams <- new("MetricParams", smatrix=bs85, gapOpen=-1, gapExtension=-0.2)
 
 sdist <- function(s1, s2, params=default.MetricParams) {
   
@@ -128,11 +128,14 @@ setGeneric("dist")
 setMethod("dist", "Sequences", function(x, method="euclidian", diag=F, upper=F, p=2) dist.Sequences(x, method))
 setMethod("[", signature=c("Sequences"), definition=function(x, i, j, ..., drop) {
   if(missing(j)) {
-    new("Sequences", x@.Data[i,], alphabet=x@alphabet, nseqs=length(i))
+    if(length(i) == 1)
+        factory.Sequences(t(x@.Data[i,]), alphabet=x@alphabet, nseqs=length(i), weights=x@weights[i])
+    else
+        factory.Sequences(x@.Data[i,], alphabet=x@alphabet, nseqs=length(i), weights=x@weights[i])
   } else if(missing(i)) {
-    new("Sequences", x@.Data[,j], alphabet=x@alphabet, nseqs=0)
+    factory.Sequences(x@.Data[,j], alphabet=x@alphabet, nseqs=0, weights=x@weights)
   } else {
-    new("Sequences", x@.Data[i,j], alphabet=x@alphabet, nseqs=0)
+    factory.Sequences(x@.Data[i,j], alphabet=x@alphabet, nseqs=0, weights=x@weights[i])
   }
 } )
 
@@ -161,8 +164,10 @@ processError <- function(e, mymessage) {
 }
 
 read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
-                 fill = FALSE, comment.char="", alphabet=aabet, remove.duplicates=FALSE) {
-  
+                 fill = FALSE, comment.char="", alphabet=aabet, remove.duplicates=FALSE,
+                           weights=NULL) {
+
+    
   #assumes that the first column is the sequence information
 
   #first, make sure the given alphabet contains error/gap characeters
@@ -180,8 +185,19 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
   #Try loading the file
   tryCatch(data <- read.table(file, header=header, sep=sep, quote=quote, dec=dec, fill=fill, comment.char=comment.char), error=function(e) {processError(e, "Could not read file")})
 
+  #check if weights match the file
+  if(!is.null(weights) && nrow(data) != length(weights)) {
+      cat("Warning: Ignoring weights because they are wrong length\n")
+      cat(paste("weights length =", length(weights), "sequence number =", nrow(data), "\n"))
+      weights <- NULL
+  }
+
   #remove duplicates if necessary
   if(remove.duplicates) {
+    if(!is.null(weights)) {        
+        #remove weights corresponding to duplicates
+        weights <- weights[!duplicated(data[,1]),]
+    }
     data <- data[!duplicated(data[,1]),]
   }
 
@@ -213,9 +229,11 @@ read.sequences <- function(file, header = FALSE, sep = "", quote="\"", dec=".",
 
   rownames(seqmatrix) <- rnames
 
-
-  seqs <- new("Sequences",  seqmatrix, alphabet=alphabet, nseqs=nseqs)
-
+  if(is.null(weights)) {
+      seqs <- factory.Sequences( seqmatrix, alphabet=alphabet, nseqs=nseqs)
+  } else {
+      seqs <- factory.Sequences( seqmatrix, alphabet=alphabet, nseqs=nseqs, weights=weights)
+  }
   
   return(seqs)
 }
@@ -373,9 +391,9 @@ motifModelSet <- function(seqs, motifNumber=NA, type="fixed", width=4, verbose=T
   seqList <- vector(mode="list", length=motifNumber)
   
   for(i in 1:motifNumber) {
-    seqList[[i]] <- new("Sequences", seqs[clusters[[i]],], alphabet=seqs@alphabet)
+    seqList[[i]] <- seqs[clusters[[i]],]
   }
-  
+
   result <- lapply(seqList, FUN=function(x) { motifModel(x, type, width) })
   mset <- new("MotifModelSet", motifs=result)
   
@@ -395,7 +413,7 @@ motifModel <- function(seqs, type="fixed", width=4) {
   
   if(class(seqs) == "matrix") {
 
-    seqs <- new("Sequences", seqs, alphabet=aabet, nseqs=seqs@nseqs)
+    seqs <- factory.Sequences(seqs, alphabet=aabet, nseqs=seqs@nseqs)
     
   }
   
@@ -508,7 +526,7 @@ setGeneric("predict")
 setMethod("predict", "MotifModel", function(object,...) predict.MotifModel(object,... ))
 setMethod("predict", "MotifModelSet", function(object,...) predict.MotifModelSet(object,... ))
 
-EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
+EMStep.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
 
   bcounts <- rep(1, length(models[[1]]@bmodel))
   bsum <- 0
@@ -517,6 +535,7 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
 
     model <- models[[mindex]]
     seqmatrix <- fullSeqMatrix[seqids[[mindex]],]@.Data
+    seq.weights <- seqs@weights[seqids[[mindex]]]
     
     m <- (ncol(seqmatrix) - model@width + 1)
     n <- nrow(seqmatrix)
@@ -531,6 +550,7 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
     for(i in 1:n) {
       for(j in 1:m) {
         for(k in 1:ncol(seqmatrix)) {
+          #note that that multiplication here is correct and different than what's in White et al
           if(k >= j && k < j + model@width) {
             ztrial[j] <- ztrial[j] * model@mmodel[seqmatrix[i,k],k - j + 1]
           }
@@ -550,11 +570,11 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
       for(j in 1:m) {
         for(k in 1:ncol(seqmatrix)) {
           if(k >= j && k < j + model@width) {
-            mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[j]
-            msums[k - j + 1] <- msums[k - j + 1] + ztrial[j]
+            mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  seq.weights[i] * ztrial[j]
+            msums[k - j + 1] <- msums[k - j + 1] + seq.weights[i] * ztrial[j]
           } else {
-            bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[j]
-            bsum <- bsum + 1. - ztrial[j]
+            bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - seq.weights[i] * ztrial[j]
+            bsum <- bsum + 1. - seq.weights[i] * ztrial[j]
           }
         }
       }
@@ -585,8 +605,8 @@ EM.SSOOPS.Linked <- function(fullSeqMatrix, seqids, models) {
 EMStep.SSOOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
-
   seqmatrix <- seqs@.Data
+  seq.weights <- seqs@weights
 
   m <- (ncol(seqmatrix) - model@width + 1)
   n <- nrow(seqmatrix)
@@ -609,6 +629,7 @@ EMStep.SSOOPS <- function(model, seqs) {
   for(i in 1:n) {
     for(j in 1:m) {
       for(k in 1:ncol(seqmatrix)) {
+        #note that that multiplication here is correct and different than what's in White et al
 	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
           ztrial[j] <- ztrial[j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
@@ -626,12 +647,12 @@ EMStep.SSOOPS <- function(model, seqs) {
        for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
            if(seqmatrix[i,k] <= nrow(mcounts)) {
-             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[j]
-             msums[k - j + 1] <- msums[k - j + 1] + ztrial[j]
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  seq.weights[i] * ztrial[j]
+             msums[k - j + 1] <- msums[k - j + 1] + seq.weights[i] * ztrial[j]
            }
           } else {
-  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[j]
-              bsum <- bsum + 1. - ztrial[j]
+  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - seq.weights[i] * ztrial[j]
+              bsum <- bsum + 1. - seq.weights[i] * ztrial[j]
           }
        }
  }
@@ -657,6 +678,7 @@ EMStep.OOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
   seqmatrix <- seqs@.Data
+  seq.weights <- seqs@weights
   
   m <- (ncol(seqmatrix) - model@width + 1)
   n <- nrow(seqmatrix)
@@ -680,6 +702,7 @@ EMStep.OOPS <- function(model, seqs) {
     psum <- 0
     for(j in 1:m) {
       for(k in 1:ncol(seqmatrix)) {
+        #note that that multiplication here is correct and different than what's in White et al          
 	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
             ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
@@ -694,12 +717,12 @@ EMStep.OOPS <- function(model, seqs) {
        for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
            if(seqmatrix[i,k] <= nrow(mcounts)) {
-             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[i,j]
-             msums[k - j + 1] <- msums[k - j + 1] + ztrial[i,j]
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  seq.weights[i] * ztrial[i,j]
+             msums[k - j + 1] <- msums[k - j + 1] + seq.weights[i] * ztrial[i,j]
            }
           } else {
-  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[i,j]
-              bsum <- bsum + 1. - ztrial[i,j]
+  	      bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - seq.weights[i] * ztrial[i,j]
+              bsum <- bsum + 1. - seq.weights[i] * ztrial[i,j]
           }
        }
      }
@@ -723,6 +746,7 @@ EMStep.ZOOPS <- function(model, seqs) {
 
   alphabet <- seqs@alphabet
   seqmatrix <- seqs@.Data
+  seq.weights <- seqs@weights
  
 
   m <- (ncol(seqmatrix) - model@width + 1)
@@ -752,6 +776,7 @@ EMStep.ZOOPS <- function(model, seqs) {
     }
     for(j in 1:m) {
       for(k in 1:ncol(seqmatrix)) {
+        #note that that multiplication here is correct and different than what's in White et al          
 	if(k >= j && k < j + model@width && seqmatrix[i,k] <= nrow(mcounts)) {
           ztrial[i,j] <- ztrial[i,j] * model@mmodel[seqmatrix[i,k],k - j + 1]
 	}
@@ -769,12 +794,12 @@ EMStep.ZOOPS <- function(model, seqs) {
        for(k in 1:ncol(seqmatrix)) {
          if(k >= j && k < j + model@width) {
            if(seqmatrix[i,k] <= nrow(mcounts)) {
-             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  ztrial[i,j]
-             msums[k - j + 1] <- msums[k - j + 1] + ztrial[i,j]
+             mcounts[seqmatrix[i,k],k - j + 1 ] <- mcounts[ seqmatrix[i,k], k - j + 1] +  seq.weights[i] * ztrial[i,j]
+             msums[k - j + 1] <- msums[k - j + 1] + seq.weights[i] * ztrial[i,j]
            }
           } else {
-	    bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - ztrial[i,j]
-            bsum <- bsum + 1. - ztrial[i,j]
+	    bcounts[seqmatrix[i,k]] <- bcounts[seqmatrix[i,k]] + 1. - seq.weights[i] * ztrial[i,j]
+            bsum <- bsum + 1. - seq.weights[i] * ztrial[i,j]
           }
        }
      }
@@ -836,7 +861,7 @@ logLik.SSOOPS <- function(model) {
             pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs@.Data[i,k], k -j + 1])
           }
           else {
-            pj <- pj + model@zvector[j] * log(model@bmodel[model@seqs@.Data[i,k]])
+            pj <- pj + (1 - model@zvector[j]) * log(model@bmodel[model@seqs@.Data[i,k]])
           }
         }
         pseq <- pseq + pj
@@ -926,7 +951,15 @@ setGeneric("BIC")
 setMethod("BIC", "MotifModelSet", function(object) BIC.MotifModelSet(object))
 setMethod("BIC", "MotifModel", function(object) BIC.MotifModel(object))
 
+factory.Sequences <- function(data, alphabet, nseqs=0, weights=rep(1,nrow(data))) {
+    if(nseqs == 0) {
+        #Try to get the correct number of sequences. There is a tryCatch for single length
+        #sequences and 0 length datas, which both don't really have meaninful nseqs
+        tryCatch(nseqs <- length(unique(apply(data, MARGIN=1, FUN=function(x) {paste(x,collapse="")}))), error=function(e) {nseqs <- 0})
 
+    }
+    return(new("Sequences", data, alphabet=alphabet, nseqs=nseqs, weights=weights))
+}
 factory.OOPS <- function(seqs, width=ncol(seqs)) {
   alphabet <- seqs@alphabet
   
@@ -977,10 +1010,6 @@ factory.ZOOPS <- function(seqs, width=ncol(seqs)) {
   return(model)
 }
 
-
-print.Sequences <- function(seqs) {
-  
-}
 
 print.MotifModel <- function(x,...) {
 
@@ -1085,7 +1114,7 @@ plot.MotifModelSet <- function(x,...) {
 
   }
 
-  seqs <- new("Sequences", seqs.data,alphabet=model@motifs[[1]]@seqs@alphabet)
+  seqs <- factory.Sequences(seqs.data,alphabet=model@motifs[[1]]@seqs@alphabet)
 
 
   colors <- rep("black", nrow(seqs))
@@ -1093,7 +1122,7 @@ plot.MotifModelSet <- function(x,...) {
   for(i in 1:length(clusters)) {
     colors[clusters[[i]]] <- shades[i]
   }
-
+  
   fit <- prcomp(dist(seqs))
   x <- fit$x[,1]
   y <- fit$x[,2]
@@ -1635,7 +1664,9 @@ plot.Descriptors <- function(desc,...) {
 setMethod("plot", "Descriptors", function(x, y, ...) plot.Descriptors(x, y, ...))
 
 rbind.Sequences <- function(seq1, seq2) {
-  seqs <- new("Sequences", rbind(seq1@.Data, seq2@.Data), alphabet=unique(c(seq1@alphabet, seq2@alphabet)))
+  seqs <- factory.Sequences(rbind(seq1@.Data, seq2@.Data),
+                            alphabet=unique(c(seq1@alphabet, seq2@alphabet)),
+                            weights=c(seq1@weights,seq2@weights))
   return(seqs)
 }
 setGeneric("rbind")
@@ -1648,7 +1679,7 @@ decoys <- function(seqs, n=nrow(seqs)){
   rownames(decoys) <- decoyNames
   
 
-  return(new("Sequences", decoys, alphabet=seqs@alphabet))
+  return(factory.Sequences(decoys, alphabet=seqs@alphabet))
 }
 
 #This function will give the FP and FN values. Classes should be
@@ -1720,8 +1751,9 @@ FiveTwoCV.Sequences <- function(seqs, classes, motifNumber=1, motifModelType="fi
     validate.p <- setdiff(1:nrow(pseqs.data), train.p)
     validate.n <- setdiff(1:nrow(nseqs.data), train.n)
 
-    tseqs <- new("Sequences", rbind(pseqs.data[train.p,], nseqs.data[train.n,]), alphabet=seqs@alphabet)
-    vseqs <- new("Sequences", rbind(pseqs.data[validate.p,],nseqs.data[validate.n,]), alphabet=seqs@alphabet)
+    tseqs <- factory.Sequences(rbind(pseqs.data[train.p,], nseqs.data[train.n,]), alphabet=seqs@alphabet, weights=c(seqs@weights[pclasses][train.p],seqs@weights[nclasses][train.n]))
+    vseqs <- factory.Sequences(rbind(pseqs.data[validate.p,],nseqs.data[validate.n,]), alphabet=seqs@alphabet,
+                               weights=c(seqs@weights[pclasses][validate.p],seqs@weights[nclasses][validate.n]))
     
     mdl <- motifModelSet(tseqs, motifNumber, motifModelType, width, verbose=verbose)
     temp <- residuals(mdl, vseqs, classes=c(rep(1, length(validate.p)), rep(-1, length(validate.n))))
