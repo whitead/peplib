@@ -829,80 +829,89 @@ setMethod("EMStep", "SSOOPS", EMStep.SSOOPS)
 setMethod("EMStep", "ZOOPS", EMStep.ZOOPS)
 
 logLik.OOPS <- function(model) {
-
-  logLik <- 0
-  for(i in 1:nrow(model@seqs)) {
-    pseq <- 0
-    for(j in 1:ncol(model@seqs)) {
-      if(j + model@width - 1 <= ncol(model@seqs)) {
-        pj <- 0
-        for(k in 1:model@width) {
-          pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,j + k - 1], k])
+    
+    weights <- model@seqs@weights
+    weights <- length(weights) * weights / sum(weights)
+    logLik <- 0
+    for(i in 1:nrow(model@seqs)) {
+        pseq <- 0
+        for(j in 1:ncol(model@seqs)) {
+            if(j + model@width - 1 <= ncol(model@seqs)) {
+                pj <- 0
+                for(k in 1:model@width) {
+                    pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,j + k - 1], k])
+                }
+                pseq <- pseq + pj
+            }
+           #I should consider re-adding backgrounds, but it leads to
+           #decreasing log-likelihoods occasionally which confuse
+           #interpreting the elbow plots, which is the only reason I
+           #calculate LL
         }
-        pseq <- pseq + pj
-      }#PUT BACKGROUND BACK IN
+        logLik <- logLik + weights[i]*pseq
     }
-    logLik <- logLik + pseq
-  }
-  names(logLik) <- NULL
-  return(logLik)
+    names(logLik) <- NULL
+    return(logLik)
 }
 
 logLik.SSOOPS <- function(model) {
 
-  logLik <- 0
-  for(i in 1:nrow(model@seqs)) {
-    pseq <- 0
-    for(j in 1:ncol(model@seqs)) {
-      if(j + model@width - 1 <= ncol(model@seqs)) {
-        pj <- 0
-        for(k in 1:ncol(model@seqs)) {
-          if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs@.Data[i,k], k -j + 1])
-          }
-          else {
-            pj <- pj + (1 - model@zvector[j]) * log(model@bmodel[model@seqs@.Data[i,k]])
-          }
+    weights <- model@seqs@weights
+    weights <- length(weights) * weights / sum(weights)
+    logLik <- 0
+    for(i in 1:nrow(model@seqs)) {
+        pseq <- 0
+        for(j in 1:ncol(model@seqs)) {
+            if(j + model@width - 1 <= ncol(model@seqs)) {
+                pj <- 0
+                for(k in 1:ncol(model@seqs)) {
+                    if(k >= j && k < j + model@width) {
+                        pj <- pj  + model@zvector[j] * log(model@mmodel[model@seqs@.Data[i,k], k -j + 1])
+                    }
+                    else {
+                        pj <- pj + (1 - model@zvector[j]) * log(model@bmodel[model@seqs@.Data[i,k]])
+                    }
+                }
+                pseq <- pseq + pj
+            }
         }
-        pseq <- pseq + pj
-      }
+        logLik <- logLik + weights[i] * pseq
     }
-    logLik <- logLik + pseq
-  }
-  names(logLik) <- NULL
-  
-  return(logLik)
+    names(logLik) <- NULL
+    
+    return(logLik)
 }
 
 logLik.ZOOPS <- function(model) {
 
-  logLik <- 0
-  for(i in 1:nrow(model@seqs)) {
-
-    pseq <- 0
-    #liklihood of sequence occuring
-    for(j in 1:ncol(model@seqs)) {
-      if(j + model@width - 1 <= ncol(model@seqs)) {
-        pj <- 0
-        for(k in 1:ncol(model@seqs)){
-          if(k >= j && k < j + model@width) {
-            pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,k], k - j + 1])
-          }
-          else {
-            pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs@.Data[i,k]])
-          }
+    weights <- model@seqs@weights
+    weights <- length(weights) * weights / sum(weights)
+    logLik <- 0
+    for(i in 1:nrow(model@seqs)) {        
+        pseq <- 0
+        #liklihood of sequence occuring
+        for(j in 1:ncol(model@seqs)) {
+            if(j + model@width - 1 <= ncol(model@seqs)) {
+                pj <- 0
+                for(k in 1:ncol(model@seqs)){
+                    if(k >= j && k < j + model@width) {
+                        pj <- pj  + model@zmatrix[i,j] * log(model@mmodel[model@seqs@.Data[i,k], k - j + 1])
+                    }
+                    else {
+                        pj <- pj + model@zmatrix[i,j] * log(model@bmodel[model@seqs@.Data[i,k]])
+                    }
+                }
+                pseq <- pseq + pj
+            }
         }
-        pseq <- pseq + pj
-      }
+        logLik <- logLik + weights[i] * pseq
+        #liklihood of peptide being background
+        for(j in 1:ncol(model@seqs)) {
+            logLik <- logLik + weights[i] * (1 - model@qarray[i]) * log(model@bmodel[model@seqs@.Data[i,k]])
+        }
     }
-    logLik <- logLik + pseq
-    #liklihood of peptide being background
-    for(j in 1:ncol(model@seqs)) {
-      logLik <- logLik + (1 - model@qarray[i]) * log(model@bmodel[model@seqs@.Data[i,k]])
-    }
-  }
-  names(logLik) <- NULL
-  return(logLik)
+    names(logLik) <- NULL
+    return(logLik)
 }
 
 BIC.MotifModel <- function(object) {
