@@ -52,12 +52,9 @@ Objects can be created by calls of the form \code{new("Sequences", data,
       sequence-sequences distance matrix. Use
       \code{method="substitution"} to use a substitution matrix for weighting
       sequence mutations and use \code{method="hamming"} to use equal weighting
-    of all mutations. Also accepts \code{params=aMetricParams} for using a
-    substitution matrix other than the default. Each substitution is
-    given a weight of 1 using the hamming method or the score from the
-    corresponding substitution matrix when using the substitution
-    method. The distance matrix is converted to a dissimilarity distance
-    by making all elements negative and adding the maximum score/weight}
+      of all mutations. See \code{\link{distance.sequences}} for the
+      ability to modify the substitution weightings.. The distance matrix is converted to a dissimilarity distance
+      by making all elements negative and adding the maximum score/weight}
     \item{plot}{\code{plot(seqs, clusterNumber=4,
 	params=default.MetricParams,
 	distanceMatrix=dist.Sequences(seqs,

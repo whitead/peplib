@@ -96,6 +96,10 @@ sHammingDist <- function(s1, s2, params) {
 
 dist.Sequences <- function(seqs, method="substitution", params=default.MetricParams, ...) {
   seqs <- seqs@.Data
+    
+  if(is.null(params)) {
+    params <- default.MetricParams
+  }
   
   if(method == "substitution" || method=="euclidian") {
     dist <- sdist
@@ -122,6 +126,11 @@ dist.Sequences <- function(seqs, method="substitution", params=default.MetricPar
     
   return(dvec)
   
+}
+
+#Due to a non-variable number of arguments in "dist", I need to expose the ability to use substitution without default parameters. Thus I create a wrapper to be exposed
+distance.sequences <- function(seqs, method="substitution", params=default.MetricParams){
+    dist.Sequences(seqs, method, params)
 }
 
 setGeneric("dist")
